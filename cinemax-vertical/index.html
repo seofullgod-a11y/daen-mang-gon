@@ -27,12 +27,13 @@
         <button data-scr="me" onclick="go('me')">ของฉัน</button>
       </div>
       <div class="sp"></div>
+      <button class="icobtn desk-only" onclick="playRandom()" title="สุ่มดู" data-ic="shuffle"></button>
       <button class="icobtn" onclick="go('search')" data-ic="search"></button>
     </div>
     <div class="wrap">
       <div id="demo-banner">⚠️ โหมดตัวอย่าง — เชื่อมต่อฐานข้อมูลไม่สำเร็จ กำลังแสดงข้อมูลจำลอง</div>
       <div class="chips" id="chips"></div>
-      <div class="hero"><div class="hero-scroll" id="heroScroll"></div></div>
+      <div class="bb" id="billboard"></div>
       <div class="sec" id="sec-cont" style="display:none">
         <div class="sec-h"><h2>ดูต่อจากที่ค้าง</h2></div>
         <div class="cont-row" id="contRow"></div>
@@ -117,11 +118,13 @@
       <button class="pl-back" onclick="closePlayer()" data-ic="back"></button>
       <div class="pl-tt" id="plTitle">—<small id="plSub"></small></div>
       <button id="muteBtn" onclick="toggleMute()"></button>
+      <button id="speedBtn" onclick="cycleSpeed()">1x</button>
     </div>
+    <div id="fastInd">⏩ กำลังเร่ง 2x</div>
     <div class="rail" id="rail"></div>
     <div class="pl-bot" id="plBot"></div>
     <div class="pl-epbar">
-      <div class="prog"><i id="progFill"></i></div>
+      <div class="prog" id="progBar"><i id="progFill"></i></div>
       <button class="pl-eplist" onclick="openSheet()"><span data-ic="list"></span> <b id="epCurTxt">—</b>&nbsp;/ <span id="epTotTxt">—</span></button>
     </div>
   </div>

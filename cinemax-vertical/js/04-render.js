@@ -63,25 +63,96 @@ function renderChips(){
   });
 }
 
+/* ── HERO BILLBOARD (หมุนอัตโนมัติ + แถบโปสเตอร์) ── */
+var _bbTimer = null, _bbIdx = 0, _bbItems = [];
+
 function renderHero(){
-  var hs = document.getElementById('heroScroll'); hs.innerHTML = '';
+  var bb = document.getElementById('billboard');
+  if(_bbTimer){ clearInterval(_bbTimer); _bbTimer = null; }
   var list = visMovies().filter(function(m){ return isPlayable(m) || ST.demo; })
-    .slice().sort(function(a,b){ return b.rating - a.rating; }).slice(0, 5);
-  list.forEach(function(m){
-    var bgUrl = m.bg || m.poster;
-    var artHtml = bgUrl
-      ? '<img class="art" loading="lazy" referrerpolicy="no-referrer" src="' + esc(bgUrl) + '" alt="" onerror="this.style.display=\'none\'">'
-      : '<div class="art" style="' + art(m.id,5) + '"></div>';
-    hs.appendChild(el('<div class="hero-card" data-id="' + esc(m.id) + '">' + artHtml +
-      '<div class="shade"></div><div class="hero-body">' +
-      '<span class="hero-tag">🔥 ' + esc((m.genre || '').split(/[·,/|]/)[0] || 'แนะนำ') + '</span>' +
-      '<div class="hero-title">' + esc(displayTitle(m)) + '</div>' +
-      '<div class="hero-meta">' +
-        (m.rating ? '<span>★ ' + m.rating.toFixed(1) + '</span><span>·</span>' : '') +
-        '<span>' + (m.type === 'series' ? 'ซีรีส์' : 'ภาพยนตร์') + '</span>' +
-        (m.year ? '<span>·</span><span>' + m.year + '</span>' : '') + '</div></div>' +
-      '<div class="hero-play">' + IC.play + '</div></div>'));
+    .slice().sort(function(a,b){ return b.rating - a.rating; }).slice(0, 6);
+  _bbItems = list; _bbIdx = 0;
+  if(!list.length){ bb.style.display = 'none'; return; }
+  bb.style.display = '';
+
+  var bgHtml = list.map(function(m, i){
+    var src = m.bg || m.poster;
+    return src
+      ? '<img class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" referrerpolicy="no-referrer" src="' + esc(src) + '" alt="">'
+      : '<div class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" style="' + art(m.id,5) + '"></div>';
+  }).join('');
+
+  bb.innerHTML =
+    '<div class="bb-bg">' + bgHtml + '</div><div class="bb-shade"></div>' +
+    '<div class="bb-body" id="bbBody"></div>' +
+    '<div class="bb-rail" id="bbRail">' + list.map(function(m, i){
+      var inner = m.poster
+        ? '<img referrerpolicy="no-referrer" src="' + esc(m.poster) + '" alt="">'
+        : '<div style="position:absolute;inset:0;' + art(m.id,9) + '"></div>';
+      return '<div class="bb-thumb' + (i === 0 ? ' on' : '') + '" data-i="' + i + '">' + inner + '</div>';
+    }).join('') + '</div>' +
+    '<div class="bb-dots" id="bbDots">' + list.map(function(_, i){
+      return '<span class="' + (i === 0 ? 'on' : '') + '" data-i="' + i + '"></span>';
+    }).join('') + '</div>';
+
+  bb.querySelectorAll('.bb-thumb,.bb-dots span').forEach(function(n){
+    n.addEventListener('click', function(ev){ ev.stopPropagation(); bbGo(parseInt(n.getAttribute('data-i'), 10), true); });
   });
+
+  if(!bb._wired){
+    bb._wired = true;
+    var sx = null;
+    bb.addEventListener('touchstart', function(e){ sx = e.touches[0].clientX; }, { passive:true });
+    bb.addEventListener('touchend', function(e){
+      if(sx == null) return;
+      var dx = e.changedTouches[0].clientX - sx; sx = null;
+      if(Math.abs(dx) > 50 && _bbItems.length > 1)
+        bbGo((_bbIdx + (dx < 0 ? 1 : -1) + _bbItems.length) % _bbItems.length, true);
+    }, { passive:true });
+    bb.addEventListener('mouseenter', function(){ if(_bbTimer){ clearInterval(_bbTimer); _bbTimer = null; } });
+    bb.addEventListener('mouseleave', bbAuto);
+  }
+  bbBody(0); bbAuto();
+}
+
+function bbAuto(){
+  if(_bbTimer) clearInterval(_bbTimer);
+  if(_bbItems.length > 1)
+    _bbTimer = setInterval(function(){ bbGo((_bbIdx + 1) % _bbItems.length); }, 6000);
+}
+
+function bbGo(i, manual){
+  _bbIdx = i;
+  var bb = document.getElementById('billboard');
+  bb.querySelectorAll('.bb-img').forEach(function(n){ n.classList.toggle('on', +n.getAttribute('data-i') === i); });
+  bb.querySelectorAll('.bb-thumb').forEach(function(n){ n.classList.toggle('on', +n.getAttribute('data-i') === i); });
+  bb.querySelectorAll('.bb-dots span').forEach(function(n){ n.classList.toggle('on', +n.getAttribute('data-i') === i); });
+  bbBody(i);
+  if(manual) bbAuto();
+}
+
+function bbBody(i){
+  var m = _bbItems[i]; if(!m) return;
+  var desc = m.desc || ''; if(desc.length > 170) desc = desc.slice(0, 170) + '…';
+  document.getElementById('bbBody').innerHTML =
+    '<span class="hero-tag">🔥 ' + esc((m.genre || '').split(/[·,/|]/)[0] || 'แนะนำ') + '</span>' +
+    '<h1 class="bb-title">' + esc(displayTitle(m)) + '</h1>' +
+    '<div class="bb-meta">' +
+      (m.rating ? '<span class="gd">★ ' + m.rating.toFixed(1) + '</span><i>·</i>' : '') +
+      '<span>' + (m.type === 'series' ? 'ซีรีส์' : 'ภาพยนตร์') + '</span>' +
+      (m.year ? '<i>·</i><span>' + m.year + '</span>' : '') +
+      (m.genre ? '<i>·</i><span>' + esc(m.genre) + '</span>' : '') + '</div>' +
+    (desc ? '<p class="bb-desc">' + esc(desc) + '</p>' : '') +
+    '<div class="bb-actions">' +
+      '<button class="bb-play" onclick="openPlayer(\'' + esc(m.id) + '\')">' + IC.play + ' ดูเลย</button>' +
+      '<button class="bb-fav" onclick="bbFav(this,\'' + esc(m.id) + '\')">' + (isFav(m.id) ? '✓ ในรายการโปรด' : '+ รายการโปรด') + '</button></div>';
+}
+
+function bbFav(btn, id){
+  var on = toggleFav(id);
+  btn.textContent = on ? '✓ ในรายการโปรด' : '+ รายการโปรด';
+  toast(on ? 'เพิ่มในรายการโปรดแล้ว' : 'นำออกจากรายการโปรดแล้ว');
+  renderProfile();
 }
 
 function renderContinue(){

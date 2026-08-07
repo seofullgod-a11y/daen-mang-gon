@@ -6,7 +6,14 @@ var FEED = [];        // [{m, ep|null}]
 var CUR = null;       // movie ปัจจุบัน
 var curIdx = 0;
 var _hls = null;
-var _muted = true;
+var _muted = localStorage.getItem('cxv_muted') !== '0';        // จำค่าเสียง
+var _speed = parseFloat(localStorage.getItem('cxv_speed')) || 1; // จำความเร็ว
+var SPEEDS = [1, 1.25, 1.5, 2];
+
+function curVideo(){
+  var pg = document.querySelector('#feed .ep[data-i="' + curIdx + '"]');
+  return pg ? pg.querySelector('video') : null;
+}
 
 /* ── วิเคราะห์ชนิด URL ── */
 function classify(url){
@@ -80,10 +87,7 @@ function buildFeed(pages, startIdx){
       (p.empty ? '<div class="ep-note">ยังไม่มีตอนในซีรีส์นี้</div>' : '') +
       ((!p.loading && !p.empty && !p.ep && !m.video) ? '<div class="ep-note">🎬 ยังไม่มีลิงก์วิดีโอ' + (ST.demo ? ' (โหมดตัวอย่าง)' : '') + '</div>' : '') +
       '</div>');
-    page.addEventListener('click', function(){
-      var v = page.querySelector('video');
-      if(v){ if(v.paused){ v.play(); page.classList.remove('paused'); } else { v.pause(); page.classList.add('paused'); } }
-    });
+    attachGestures(page);
     feed.appendChild(page);
   });
   requestAnimationFrame(function(){
@@ -110,6 +114,7 @@ function mountMedia(i){
     var v = document.createElement('video');
     v.playsInline = true; v.autoplay = true; v.muted = _muted;
     v.setAttribute('playsinline',''); v.preload = 'auto';
+    v.playbackRate = _speed;
     md.appendChild(v);
     if(c.kind === 'hls' && window.Hls && Hls.isSupported()){
       _hls = new Hls({ maxBufferLength: 30 });
@@ -135,6 +140,8 @@ function mountMedia(i){
     v.addEventListener('ended', function(){ if(curIdx < FEED.length - 1) jumpTo(curIdx + 1); });
     v.play().catch(function(){ page.classList.add('paused'); });
     document.getElementById('muteBtn').style.display = 'grid';
+    var sb = document.getElementById('speedBtn');
+    sb.style.display = 'grid'; sb.textContent = _speed + 'x';
     updateMuteBtn();
   } else {
     var f = document.createElement('iframe');
@@ -142,8 +149,61 @@ function mountMedia(i){
     f.allowFullscreen = true;
     md.appendChild(f);
     document.getElementById('muteBtn').style.display = 'none';
+    document.getElementById('speedBtn').style.display = 'none';
     document.getElementById('progFill').style.width = '0%';
   }
+}
+
+/* ── GESTURES: แตะหยุด/เล่น · แตะสองครั้งถูกใจ · กดค้างเร่ง 2x ── */
+function attachGestures(page){
+  var tapTimer = null, holdTimer = null, held = false;
+  page.addEventListener('pointerdown', function(){
+    held = false;
+    holdTimer = setTimeout(function(){
+      held = true;
+      var v = curVideo();
+      if(v){ v.playbackRate = 2; document.getElementById('fastInd').classList.add('on'); }
+    }, 400);
+  });
+  function endHold(){
+    clearTimeout(holdTimer);
+    if(held){
+      var v = curVideo();
+      if(v) v.playbackRate = _speed;
+      document.getElementById('fastInd').classList.remove('on');
+    }
+  }
+  page.addEventListener('pointerup', function(ev){
+    endHold();
+    if(held){ held = false; return; }
+    if(tapTimer){                       // แตะสองครั้ง → ถูกใจ
+      clearTimeout(tapTimer); tapTimer = null;
+      var m = FEED[curIdx] && FEED[curIdx].m;
+      if(m && !isLiked(m.id)){
+        toggleLike(m.id);
+        var lb = document.getElementById('btnLike');
+        if(lb){ lb.classList.add('liked'); lb.querySelector('.n').textContent = 'ถูกใจแล้ว'; }
+      }
+      heartBurstAt(ev.clientX, ev.clientY);
+    } else {
+      tapTimer = setTimeout(function(){   // แตะครั้งเดียว → หยุด/เล่น
+        tapTimer = null;
+        var v = page.querySelector('video');
+        if(v){ if(v.paused){ v.play(); page.classList.remove('paused'); } else { v.pause(); page.classList.add('paused'); } }
+      }, 250);
+    }
+  });
+  page.addEventListener('pointercancel', endHold);
+  page.addEventListener('pointerleave', endHold);
+}
+
+function cycleSpeed(){
+  var i = (SPEEDS.indexOf(_speed) + 1) % SPEEDS.length;
+  _speed = SPEEDS[i];
+  localStorage.setItem('cxv_speed', _speed);
+  var v = curVideo(); if(v) v.playbackRate = _speed;
+  document.getElementById('speedBtn').textContent = _speed + 'x';
+  toast('ความเร็ว ' + _speed + 'x');
 }
 
 function pageInfo(i, extra){
@@ -237,16 +297,41 @@ function buildCaption(m, p){
     '<div class="pl-cap"><b>' + esc(displayTitle(m)) + '</b>' + (desc ? ' — ' + esc(desc) : '') + '</div>';
 }
 
-function heartBurst(){
+function heartBurst(){ heartBurstAt(null, null); }
+function heartBurstAt(x, y){
   var b = el('<div class="burst">' + IC.heartF + '</div>');
-  b.style.right = '28px'; b.style.bottom = '240px';
-  document.getElementById('player').appendChild(b);
+  var host = document.getElementById('player');
+  if(x != null){
+    var r = host.getBoundingClientRect();
+    b.style.left = (x - r.left - 15) + 'px'; b.style.top = (y - r.top - 15) + 'px';
+  } else {
+    b.style.right = '28px'; b.style.bottom = '240px';
+  }
+  host.appendChild(b);
   setTimeout(function(){ b.remove(); }, 1000);
 }
+
+/* ── ลากแถบเวลาเพื่อเลื่อนตำแหน่ง (native video เท่านั้น) ── */
+(function(){
+  var bar = document.getElementById('progBar');
+  if(!bar) return;
+  function seek(clientX){
+    var v = curVideo(); if(!v || !v.duration) return;
+    var r = bar.getBoundingClientRect();
+    var p = Math.min(Math.max((clientX - r.left) / r.width, 0), 1);
+    v.currentTime = p * v.duration;
+    document.getElementById('progFill').style.width = (p * 100) + '%';
+  }
+  var dragging = false;
+  bar.addEventListener('pointerdown', function(e){ dragging = true; bar.setPointerCapture(e.pointerId); seek(e.clientX); e.stopPropagation(); });
+  bar.addEventListener('pointermove', function(e){ if(dragging){ seek(e.clientX); e.stopPropagation(); } });
+  bar.addEventListener('pointerup', function(e){ dragging = false; e.stopPropagation(); });
+})();
 
 /* ── mute ── */
 function toggleMute(){
   _muted = !_muted;
+  localStorage.setItem('cxv_muted', _muted ? '1' : '0');
   var v = document.querySelector('#feed video');
   if(v) v.muted = _muted;
   updateMuteBtn();
