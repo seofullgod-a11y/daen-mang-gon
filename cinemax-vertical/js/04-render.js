@@ -100,7 +100,7 @@ function renderContinue(){
 
 function renderRank(){
   var rr = document.getElementById('rankRow'); rr.innerHTML = '';
-  var list = visMovies().slice().sort(function(a,b){ return b.rating - a.rating; }).slice(0, 8);
+  var list = visMovies().slice().sort(function(a,b){ return b.rating - a.rating; }).slice(0, 10);
   list.forEach(function(m, i){
     rr.appendChild(el('<div class="rank-card' + (i < 3 ? ' top' : '') + '" data-id="' + esc(m.id) + '">' +
       '<div class="rank-num">' + (i + 1) + '</div>' + posterHtml(m) +

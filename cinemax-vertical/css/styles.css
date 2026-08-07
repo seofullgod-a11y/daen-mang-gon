@@ -26,7 +26,7 @@ svg{display:block}
   var(--bg)}
 .screen{display:none;min-height:100dvh;padding-bottom:86px}
 .screen.on{display:block}
-.wrap{max-width:1240px;margin:0 auto}
+.wrap{width:100%}
 
 /* ── LOADING / DEMO BANNER ───────────────────────── */
 #loading{position:fixed;inset:0;z-index:300;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
@@ -301,8 +301,9 @@ svg{display:block}
   .screen{padding-bottom:30px}
   #nav{display:none}
   .toplinks{display:flex}
-  #topbar{padding-top:16px;padding-bottom:12px}
-  .sec,.hero,.chips{padding-left:36px;padding-right:36px}
+  #topbar{padding:16px 44px 12px}
+  .sec,.hero,.chips{padding-left:44px;padding-right:44px}
+  #demo-banner{margin-left:44px;margin-right:44px}
   .grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr))}
   .hero-card{flex-basis:32.5%;aspect-ratio:16/9.6}
   .rank-card{flex-basis:164px}
