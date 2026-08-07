@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>CineMax · แนวตั้ง (Prototype v2)</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="stage">
+<div id="phone">
+  <div class="note">PROTOTYPE · แตะโปสเตอร์เพื่อดู · เลื่อนขึ้น-ลงเปลี่ยนตอน</div>
+
+  <!-- HOME -->
+  <div class="screen on" id="scr-home">
+    <div id="topbar">
+      <div class="logo"><span class="seal">剧</span><b>Cine</b><em>Max</em></div>
+      <div class="sp"></div>
+      <div class="coin"><span class="c"></span><b>288</b></div>
+      <button class="icobtn" onclick="go('search')" data-ic="search"></button>
+    </div>
+    <div class="chips" id="chips"></div>
+
+    <div class="hero"><div class="hero-scroll" id="heroScroll"></div></div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>ดูต่อจากที่ค้าง</h2><span class="more">ทั้งหมด ›</span></div>
+      <div class="cont-row" id="contRow"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>อันดับยอดฮิต 🔥</h2><span class="more">ทั้งหมด ›</span></div>
+      <div class="rank-row" id="rankRow"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>ใหม่ล่าสุด</h2><span class="more">ดูเพิ่ม ›</span></div>
+      <div class="grid" id="gridNew"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>แนะนำสำหรับคุณ</h2><span class="more">ดูเพิ่ม ›</span></div>
+      <div class="grid" id="gridRec"></div>
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="screen" id="scr-rank">
+    <div id="topbar"><div class="logo kanit" style="font-size:1.1rem;gap:8px"><span class="seal">榜</span>ชาร์ตความนิยม</div></div>
+    <div class="chips">
+      <div class="chip on">รายวัน</div><div class="chip">รายสัปดาห์</div><div class="chip">พุ่งแรง</div><div class="chip">ดราม่า</div><div class="chip">รักหวาน</div>
+    </div>
+    <div class="sec" style="padding-top:2px"><div id="rankFull"></div></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="screen" id="scr-search">
+    <div id="topbar" style="gap:10px">
+      <button class="icobtn" onclick="go('home')" data-ic="back"></button>
+      <div style="flex:1;display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.06);padding:10px 15px;border-radius:22px;border:1px solid var(--line)">
+        <span data-ic="search" style="color:var(--g3)"></span><span style="color:var(--g3);font-size:.85rem">ค้นหาซีรีส์แนวตั้ง...</span>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-h"><h2>กำลังมาแรง</h2></div>
+      <div class="chips" style="flex-wrap:wrap;padding:0">
+        <div class="chip">#เจ้าสัวหลงรัก</div><div class="chip">#แค้นล้างแค้น</div><div class="chip">#สวมรอยเจ้าสาว</div>
+        <div class="chip">#ท่านประธาน</div><div class="chip">#รักข้ามภพ</div><div class="chip">#ลูกครึ่งมังกร</div>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-h"><h2>ผลลัพธ์ยอดนิยม</h2></div><div class="grid" id="gridSearch"></div></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="scr-me">
+    <div class="prof-hd">
+      <div class="pa"><div class="art" style="position:absolute;inset:0;background:linear-gradient(135deg,#ff6a88,#b16cea)"></div></div>
+      <div><div class="nm">คุณกัปตัน</div><div class="sub"><span class="vipchip">VIP</span> หมดอายุ 12 ก.ย. 2569</div></div>
+    </div>
+    <div class="stats">
+      <div><b>24</b><span>กำลังดู</span></div>
+      <div><b>108</b><span>รายการโปรด</span></div>
+      <div><b class="gd">288</b><span>เหรียญ</span></div>
+    </div>
+    <div style="padding:14px 16px 8px">
+      <div class="vip">
+        <div class="crown"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 7l4.6 3.2L12 4l4.9 6.2L21.5 7l-1.8 11.3a1.5 1.5 0 01-1.5 1.2H5.8a1.5 1.5 0 01-1.5-1.2L2.5 7z"/></svg></div>
+        <div style="flex:1;position:relative;z-index:1"><div class="kanit" style="font-weight:700">อัปเกรด VIP ปลดล็อกทุกตอน</div>
+        <div style="font-size:.71rem;color:var(--g2);margin-top:2px">ดูไม่จำกัด · ไม่มีโฆษณา · ตอนใหม่ก่อนใคร</div></div>
+        <button class="bt">เติมเลย</button>
+      </div>
+    </div>
+    <div class="prow"><span class="ric" data-ic="clock"></span> ดูต่อ <span class="ar">›</span></div>
+    <div class="prow"><span class="ric" data-ic="heart"></span> รายการโปรด <span class="ar">›</span></div>
+    <div class="prow"><span class="ric" data-ic="coin"></span> เติมเหรียญ <span class="ar">›</span></div>
+    <div class="prow"><span class="ric" data-ic="gear"></span> ตั้งค่า <span class="ar">›</span></div>
+  </div>
+
+  <!-- PLAYER -->
+  <div id="player">
+    <div id="feed"></div>
+    <div class="pl-top">
+      <button class="pl-back" onclick="closePlayer()" data-ic="back"></button>
+      <div class="pl-tt" id="plTitle">—<small id="plSub">ตอนที่ 1</small></div>
+    </div>
+    <div class="rail" id="rail"></div>
+    <div class="pl-bot" id="plBot"></div>
+    <div class="pl-epbar">
+      <div class="prog"><i id="progFill"></i></div>
+      <button class="pl-eplist" onclick="openSheet()"><span data-ic="list"></span> <b id="epCurTxt">EP 1</b>&nbsp;/ <span id="epTotTxt">80</span></button>
+    </div>
+  </div>
+
+  <!-- SHEET -->
+  <div id="sheetbg" onclick="closeSheet()"></div>
+  <div id="sheet">
+    <div class="sheet-h">
+      <h3 id="sheetTitle">เลือกตอน</h3><span class="cnt" id="sheetCnt"></span>
+      <span class="x" onclick="closeSheet()">✕</span>
+    </div>
+    <div class="ep-grid" id="epGrid"></div>
+  </div>
+
+  <!-- NAV -->
+  <div id="nav">
+    <button class="on" data-scr="home" onclick="go('home')"><span data-ic="home"></span>หน้าแรก</button>
+    <button data-scr="rank" onclick="go('rank')"><span data-ic="trophy"></span>ชาร์ต</button>
+    <button class="center-btn" onclick="playRandom()"><span class="cb"><span data-ic="play"></span></span></button>
+    <button data-scr="search" onclick="go('search')"><span data-ic="search"></span>ค้นหา</button>
+    <button data-scr="me" onclick="go('me')"><span data-ic="user"></span>ฉัน</button>
+  </div>
+
+</div>
+</div>
+
+<script src="js/01-icons.js"></script>
+<script src="js/02-data.js"></script>
+<script src="js/03-home.js"></script>
+<script src="js/04-nav.js"></script>
+<script src="js/05-player.js"></script>
+<script src="js/06-sheet.js"></script>
+</body>
+</html>
