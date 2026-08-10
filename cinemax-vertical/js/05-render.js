@@ -170,12 +170,12 @@ function bbBody(i){
     (desc ? '<p class="bb-desc">' + esc(desc) + '</p>' : '') +
     '<div class="bb-actions">' +
       '<button class="bb-play" onclick="openPlayer(\'' + esc(m.id) + '\')">' + IC.play + ' ดูเลย</button>' +
-      '<button class="bb-fav" onclick="bbFav(this,\'' + esc(m.id) + '\')">' + (isFav(m.id) ? '✓ ในรายการโปรด' : '+ รายการโปรด') + '</button></div>';
+      '<button class="bb-fav" onclick="bbFav(this,\'' + esc(m.id) + '\')">' + (isFav(m.id) ? '✓ โปรดแล้ว' : '+ โปรด') + '</button></div>';
 }
 
 function bbFav(btn, id){
   var on = toggleFav(id);
-  btn.textContent = on ? '✓ ในรายการโปรด' : '+ รายการโปรด';
+  btn.textContent = on ? '✓ โปรดแล้ว' : '+ โปรด';
   toast(on ? 'เพิ่มในรายการโปรดแล้ว' : 'นำออกจากรายการโปรดแล้ว');
   renderProfile();
 }
