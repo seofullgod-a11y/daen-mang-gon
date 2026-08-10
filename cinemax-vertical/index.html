@@ -6,6 +6,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>CineMax — ซีรีส์สั้นแนวตั้ง</title>
 <meta name="description" content="ดูซีรีส์สั้นแนวตั้งและภาพยนตร์ อัปเดตทุกวัน">
+<meta name="theme-color" content="#0a0910">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-64.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CineMax">
+<meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
@@ -27,11 +35,11 @@
         <button data-scr="me" onclick="go('me')">ของฉัน</button>
       </div>
       <div class="sp"></div>
-      <button class="icobtn desk-only" onclick="playRandom()" title="สุ่มดู" data-ic="shuffle"></button>
-      <button class="icobtn" onclick="go('search')" data-ic="search"></button>
+      <button class="icobtn desk-only" onclick="playRandom()" title="สุ่มดู" aria-label="สุ่มดู" data-ic="shuffle"></button>
+      <button class="icobtn" onclick="go('search')" aria-label="ค้นหา" data-ic="search"></button>
     </div>
     <div class="wrap">
-      <div id="demo-banner">⚠️ โหมดตัวอย่าง — เชื่อมต่อฐานข้อมูลไม่สำเร็จ กำลังแสดงข้อมูลจำลอง</div>
+      <div id="demo-banner"><span style="flex:1">⚠️ เชื่อมต่อฐานข้อมูลไม่สำเร็จ — กำลังแสดงข้อมูลตัวอย่าง</span><button class="db-retry" onclick="retryConnect()">ลองใหม่</button></div>
       <div class="chips" id="chips"></div>
       <div class="bb" id="billboard"></div>
       <div class="sec" id="sec-cont" style="display:none">
@@ -106,6 +114,7 @@
         <div class="grid" id="gridFav"></div>
       </div>
       <div class="sec" style="padding-top:26px">
+        <div class="prow" id="rowInstall" style="display:none" onclick="promptInstall()"><span class="ric" data-ic="download"></span> ติดตั้งเป็นแอป <span class="ar">›</span></div>
         <div class="prow" onclick="clearHistory();toast('ล้างประวัติการดูแล้ว')"><span class="ric" data-ic="clock"></span> ล้างประวัติการดู <span class="ar">›</span></div>
       </div>
     </div>
@@ -115,16 +124,20 @@
   <div id="player">
     <div id="feed"></div>
     <div class="pl-top">
-      <button class="pl-back" onclick="closePlayer()" data-ic="back"></button>
+      <button class="pl-back" onclick="closePlayer()" aria-label="ปิด" data-ic="back"></button>
       <div class="pl-tt" id="plTitle">—<small id="plSub"></small></div>
-      <button id="muteBtn" onclick="toggleMute()"></button>
-      <button id="speedBtn" onclick="cycleSpeed()">1x</button>
+      <button id="muteBtn" onclick="toggleMute()" aria-label="เปิด/ปิดเสียง"></button>
+      <button id="speedBtn" onclick="cycleSpeed()" aria-label="ความเร็ว">1x</button>
     </div>
     <div id="fastInd">⏩ กำลังเร่ง 2x</div>
+    <div class="pl-arrows">
+      <button id="arrPrev" onclick="jumpTo(curIdx-1)" aria-label="ตอนก่อนหน้า" data-ic="chevUp"></button>
+      <button id="arrNext" onclick="jumpTo(curIdx+1)" aria-label="ตอนถัดไป" data-ic="chevDown"></button>
+    </div>
     <div class="rail" id="rail"></div>
     <div class="pl-bot" id="plBot"></div>
     <div class="pl-epbar">
-      <div class="prog" id="progBar"><i id="progFill"></i></div>
+      <div class="prog" id="progBar"><i id="progFill"></i><span id="seekTip">0:00 / 0:00</span></div>
       <button class="pl-eplist" onclick="openSheet()"><span data-ic="list"></span> <b id="epCurTxt">—</b>&nbsp;/ <span id="epTotTxt">—</span></button>
     </div>
   </div>
@@ -140,6 +153,22 @@
     <div class="ep-grid" id="epGrid"></div>
   </div>
 
+  <!-- COMMENTS SHEET -->
+  <div id="cmtSheetbg" onclick="closeComments()"></div>
+  <div id="cmtSheet">
+    <div class="sheet-h">
+      <h3>คอมเมนต์</h3><span class="cnt" id="cmtCount"></span><span class="cnt" id="cmtSub"></span>
+      <span class="x" onclick="closeComments()">✕</span>
+    </div>
+    <div class="cmt-list" id="cmtList"></div>
+    <div class="cmt-input">
+      <input id="cmtNick" placeholder="ชื่อเล่น" maxlength="30" autocomplete="off">
+      <input id="cmtBody" placeholder="แสดงความคิดเห็น..." maxlength="500" autocomplete="off"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();sendComment();}">
+      <button id="cmtSend" onclick="sendComment()" aria-label="ส่งคอมเมนต์" data-ic="send"></button>
+    </div>
+  </div>
+
   <!-- BOTTOM NAV (มือถือ/แท็บเล็ต) -->
   <div id="nav">
     <button class="on" data-scr="home" onclick="go('home')"><span data-ic="home"></span>หน้าแรก</button>
@@ -149,16 +178,38 @@
     <button data-scr="me" onclick="go('me')"><span data-ic="user"></span>ฉัน</button>
   </div>
 
+  <!-- INSTALL BANNER -->
+  <div id="installBar">
+    <div class="ib-ic"><img src="icons/icon-192.png" alt=""></div>
+    <div class="ib-tx"><b>ติดตั้ง CineMax</b><span>เพิ่มลงหน้าจอโฮม เปิดเหมือนแอปจริง</span></div>
+    <button class="ib-go" onclick="promptInstall()">ติดตั้ง</button>
+    <button class="ib-x" onclick="dismissInstall()">✕</button>
+  </div>
+
+  <!-- iOS INSTALL HELP -->
+  <div id="iosHelp" onclick="this.classList.remove('on')">
+    <div class="ios-card" onclick="event.stopPropagation()">
+      <img src="icons/icon-192.png" alt="" class="ios-ic">
+      <b>ติดตั้ง CineMax บน iPhone</b>
+      <p>แตะปุ่ม <span class="ios-share">􀈂 แชร์</span> ด้านล่างของ Safari<br>แล้วเลือก <b>"เพิ่มไปยังหน้าจอโฮม"</b></p>
+      <button onclick="document.getElementById('iosHelp').classList.remove('on')">เข้าใจแล้ว</button>
+    </div>
+  </div>
+
   <div id="toast"></div>
 </div>
 
 <script src="js/01-icons.js"></script>
 <script src="js/02-config.js"></script>
 <script src="js/03-data.js"></script>
-<script src="js/04-render.js"></script>
-<script src="js/05-nav.js"></script>
-<script src="js/06-player.js"></script>
-<script src="js/07-sheet.js"></script>
-<script src="js/08-boot.js"></script>
+<script src="js/04-stats.js"></script>
+<script src="js/05-render.js"></script>
+<script src="js/06-nav.js"></script>
+<script src="js/07-player.js"></script>
+<script src="js/08-sheet.js"></script>
+<script src="js/09-comments.js"></script>
+<script src="js/10-boot.js"></script>
+<script src="js/11-pwa.js"></script>
+<script src="js/12-hover.js"></script>
 </body>
 </html>
