@@ -1,6 +1,8 @@
 /* ── CONFIG ───────────────────────────────────────
    ค่าเชื่อมต่อ Supabase (โปรเจกต์เดียวกับเว็บเดิม)
    anon key = public read-only ตามปกติของ Supabase   */
+var APP_VERSION = '1.6';   // เลขเวอร์ชันแอป — เช็กได้ที่หน้า "ของฉัน"
+
 var SB_URL = 'https://pugdpjixgwzpursmveht.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1Z2Rwaml4Z3d6cHVyc212ZWh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDkyNDQsImV4cCI6MjA5NDY4NTI0NH0.nLyAbmxqwMyN7SS6GErYJAXlbB1yjf_bKgGqrjYQ9k4';
 

@@ -380,6 +380,7 @@ svg{display:block}
 .prow .ric{width:34px;height:34px;border-radius:12px;background:var(--glass);display:grid;place-items:center;color:var(--g1)}
 .prow .ar{margin-left:auto;color:var(--g3)}
 .fav-empty{padding:20px;text-align:center;color:var(--g3);font-size:.82rem}
+.appver{padding:18px 20px;text-align:center;color:var(--g3);font-size:.7rem}
 
 /* ── skeleton ── */
 .poster.sk{background:var(--panel2);position:relative;overflow:hidden;box-shadow:none}

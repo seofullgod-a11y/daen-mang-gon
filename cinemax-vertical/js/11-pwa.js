@@ -3,9 +3,15 @@
 /* ลงทะเบียน service worker (ทำงานเมื่อเปิดผ่าน http/https เท่านั้น ไม่ทำงานกับ file://) */
 if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('service-worker.js').catch(function(e){
-      console.warn('SW register failed:', e && e.message);
-    });
+    navigator.serviceWorker.register('service-worker.js')
+      .then(function(reg){ if(reg && reg.update) reg.update(); })   // เช็กเวอร์ชันใหม่ทุกครั้งที่เปิด
+      .catch(function(e){ console.warn('SW register failed:', e && e.message); });
+  });
+  /* เมื่อ service worker ใหม่เข้าควบคุม → รีโหลดหน้า 1 ครั้งให้ได้ไฟล์ล่าสุดทันที */
+  var _swReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if(_swReloaded) return; _swReloaded = true;
+    location.reload();
   });
 }
 

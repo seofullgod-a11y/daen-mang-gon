@@ -2,6 +2,9 @@
    โหลดข้อมูล → render → เปิดเรื่องจาก #hash (ลิงก์แชร์) */
 
 (function(){
+  var av = document.getElementById('appVer');
+  if(av) av.textContent = 'CineMax เวอร์ชัน ' + APP_VERSION;
+
   /* search input */
   var si = document.getElementById('searchInput');
   si.addEventListener('input', function(){ doSearch(si.value); });
