@@ -15,6 +15,7 @@
 <meta name="apple-mobile-web-app-title" content="CineMax">
 <meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/framework7-icons.css">
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
 </head>
@@ -130,7 +131,7 @@
       <button id="muteBtn" onclick="toggleMute()" aria-label="เปิด/ปิดเสียง"></button>
       <button id="speedBtn" onclick="cycleSpeed()" aria-label="ความเร็ว">1x</button>
     </div>
-    <div id="fastInd">⏩ กำลังเร่ง 2x</div>
+    <div id="fastInd"><span data-ic="forward"></span> กำลังเร่ง 2x</div>
     <div class="pl-arrows">
       <button id="arrPrev" onclick="jumpTo(curIdx-1)" aria-label="ตอนก่อนหน้า" data-ic="chevUp"></button>
       <button id="arrNext" onclick="jumpTo(curIdx+1)" aria-label="ตอนถัดไป" data-ic="chevDown"></button>
@@ -148,7 +149,7 @@
   <div id="sheet">
     <div class="sheet-h">
       <h3 id="sheetTitle">เลือกตอน</h3><span class="cnt" id="sheetCnt"></span>
-      <span class="x" onclick="closeSheet()">✕</span>
+      <span class="x" onclick="closeSheet()" data-ic="xmark"></span>
     </div>
     <div class="chips" id="seasonTabs"></div>
     <div class="ep-grid" id="epGrid"></div>
@@ -159,7 +160,7 @@
   <div id="cmtSheet">
     <div class="sheet-h">
       <h3>คอมเมนต์</h3><span class="cnt" id="cmtCount"></span><span class="cnt" id="cmtSub"></span>
-      <span class="x" onclick="closeComments()">✕</span>
+      <span class="x" onclick="closeComments()" data-ic="xmark"></span>
     </div>
     <div class="cmt-list" id="cmtList"></div>
     <div class="cmt-input">
@@ -184,7 +185,7 @@
     <div class="ib-ic"><img src="icons/icon-192.png" alt=""></div>
     <div class="ib-tx"><b>ติดตั้ง CineMax</b><span>เพิ่มลงหน้าจอโฮม เปิดเหมือนแอปจริง</span></div>
     <button class="ib-go" onclick="promptInstall()">ติดตั้ง</button>
-    <button class="ib-x" onclick="dismissInstall()">✕</button>
+    <button class="ib-x" onclick="dismissInstall()" data-ic="xmark"></button>
   </div>
 
   <!-- iOS INSTALL HELP -->

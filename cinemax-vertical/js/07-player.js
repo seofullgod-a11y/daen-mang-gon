@@ -191,7 +191,11 @@ function attachGestures(page){
       if(m && !isLiked(m.id)){
         toggleLike(m.id); bumpLike(m.id, 1);
         var lb = document.getElementById('btnLike');
-        if(lb){ lb.classList.add('liked'); lb.querySelector('.n').textContent = likeLabel(m, true); }
+        if(lb){
+          lb.classList.add('liked');
+          lb.querySelector('.ic').innerHTML = IC.heartFill;
+          lb.querySelector('.n').textContent = likeLabel(m, true);
+        }
       }
       heartBurstAt(ev.clientX, ev.clientY);
     } else {
@@ -282,15 +286,16 @@ function buildRail(m){
     : '<div style="position:absolute;inset:0;' + art(m.id,2) + '"></div>';
   document.getElementById('rail').innerHTML =
     '<div class="avatar">' + avatar + '</div>' +
-    '<button class="act' + (liked ? ' liked' : '') + '" id="btnLike"><div class="ic">' + IC.heart + '</div><div class="n">' + likeLabel(m, liked) + '</div></button>' +
+    '<button class="act' + (liked ? ' liked' : '') + '" id="btnLike"><div class="ic">' + (liked ? IC.heartFill : IC.heart) + '</div><div class="n">' + likeLabel(m, liked) + '</div></button>' +
     '<button class="act" id="btnCmt"><div class="ic">' + IC.chat + '</div><div class="n">คอมเมนต์</div></button>' +
-    '<button class="act' + (faved ? ' faved' : '') + '" id="btnFav"><div class="ic">' + IC.bookmark + '</div><div class="n">' + (faved ? 'บันทึกแล้ว' : 'บันทึก') + '</div></button>' +
+    '<button class="act' + (faved ? ' faved' : '') + '" id="btnFav"><div class="ic">' + (faved ? IC.bookmarkFill : IC.bookmark) + '</div><div class="n">' + (faved ? 'บันทึกแล้ว' : 'บันทึก') + '</div></button>' +
     '<button class="act" onclick="openSheet()"><div class="ic">' + IC.list + '</div><div class="n">' + (FEED[curIdx] && FEED[curIdx].ep ? 'ตอน' : 'เรื่อง') + '</div></button>' +
     '<button class="act" id="btnShare"><div class="ic">' + IC.share + '</div><div class="n">แชร์</div></button>';
   document.getElementById('btnLike').addEventListener('click', function(ev){
     ev.stopPropagation();
     var on = toggleLike(m.id); this.classList.toggle('liked', on);
     bumpLike(m.id, on ? 1 : -1);
+    this.querySelector('.ic').innerHTML = on ? IC.heartFill : IC.heart;
     this.querySelector('.n').textContent = likeLabel(m, on);
     if(on) heartBurst();
   });
@@ -300,6 +305,7 @@ function buildRail(m){
   document.getElementById('btnFav').addEventListener('click', function(ev){
     ev.stopPropagation();
     var on = toggleFav(m.id); this.classList.toggle('faved', on);
+    this.querySelector('.ic').innerHTML = on ? IC.bookmarkFill : IC.bookmark;
     this.querySelector('.n').textContent = on ? 'บันทึกแล้ว' : 'บันทึก';
     toast(on ? 'เพิ่มในรายการโปรดแล้ว' : 'นำออกจากรายการโปรดแล้ว');
   });

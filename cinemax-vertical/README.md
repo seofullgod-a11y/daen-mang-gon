@@ -42,9 +42,10 @@ cinemax-vertical/
 ├── manifest.webmanifest # PWA manifest
 ├── service-worker.js    # PWA: cache app shell + ออฟไลน์
 ├── icons/               # ไอคอนแอป (192/512/maskable/apple-touch)
+├── fonts/               # ฟอนต์ไอคอน iOS (self-host — ไม่พึ่ง CDN ใช้ออฟไลน์ได้)
 ├── sql/setup.sql        # ★ รันใน Supabase SQL Editor ครั้งเดียว (ยอดวิว+คอมเมนต์)
 └── js/                  # โหลดเรียงลำดับ 01→12 (ห้ามสลับ)
-    ├── 01-icons.js         # ไอคอน SVG
+    ├── 01-icons.js         # ไอคอนสไตล์ iOS (Framework7 Icons — หน้าตาแบบ SF Symbols)
     ├── 02-config.js        # ★ ค่าเชื่อมต่อ Supabase (แก้ที่นี่ถ้าเปลี่ยนโปรเจกต์)
     ├── 03-data.js          # โหลด movies/episodes + แปลงข้อมูล + localStorage
     ├── 04-stats.js         # ยอดวิว/ถูกใจจริง (ตาราง stats + RPC)
