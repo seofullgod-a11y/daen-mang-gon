@@ -36,7 +36,7 @@ function classify(url){
 }
 
 /* ── เปิด player ── */
-function openPlayer(id){
+function openPlayer(id, target){
   var m = ST.movies.find(function(x){ return x.id === id; });
   if(!m) return;
   CUR = m;
@@ -51,9 +51,10 @@ function openPlayer(id){
       if(CUR !== m) return;
       if(!eps.length){ buildFeed([{ m: m, ep: null, empty: true }], 0); return; }
       var pages = eps.map(function(e){ return { m: m, ep: e }; });
-      var h = getHist()[m.id], start = 0;
-      if(h && h.s != null){
-        var i = pages.findIndex(function(p){ return p.ep.season === h.s && p.ep.ep === h.e; });
+      var start = 0;
+      var want = target || (function(){ var h = getHist()[m.id]; return (h && h.s != null) ? { s: h.s, e: h.e } : null; })();
+      if(want){
+        var i = pages.findIndex(function(p){ return p.ep.season === want.s && p.ep.ep === want.e; });
         if(i >= 0) start = i;
       }
       buildFeed(pages, start);
@@ -72,6 +73,7 @@ function closePlayer(fromPop){
   unmountAll(); closeSheet(true); closeComments(true);
   CUR = null; FEED = [];
   renderContinue(); renderProfile();
+  if(typeof renderRecos === 'function') renderRecos();
 }
 
 /* ── สร้าง feed ── */
@@ -111,7 +113,7 @@ function mountMedia(i){
   var p = FEED[i]; if(!p) return;
   var page = document.querySelector('#feed .ep[data-i="' + i + '"]'); if(!page) return;
   var md = page.querySelector('.media');
-  var url = p.ep ? p.ep.video : p.m.video;
+  var url = p.trailerUrl || (p.ep ? p.ep.video : p.m.video);
   var c = classify(url);
   if(c.kind === 'none') return;
 
@@ -238,7 +240,9 @@ function activate(i){
   CUR = m;
   document.getElementById('plTitle').childNodes[0].nodeValue = displayTitle(m);
   var sub;
-  if(p.ep){
+  if(p.trailerUrl){
+    sub = 'ตัวอย่าง · ' + ([m.genre, m.year].filter(Boolean).join(' · ') || '');
+  } else if(p.ep){
     sub = 'ตอนที่ ' + p.ep.ep + (p.ep.season > 1 ? ' · Season ' + p.ep.season : '') + (p.ep.title ? ' · ' + p.ep.title : '');
   } else {
     sub = [m.genre, m.year].filter(Boolean).join(' · ') || (m.type === 'series' ? 'ซีรีส์' : 'ภาพยนตร์');
@@ -260,7 +264,7 @@ function activate(i){
   var ap = document.getElementById('arrPrev'), an = document.getElementById('arrNext');
   if(ap){ ap.disabled = i <= 0; an.disabled = i >= FEED.length - 1; }
   buildRail(m); buildCaption(m, p);
-  if(!p.loading && !p.empty){
+  if(!p.loading && !p.empty && !p.trailerUrl){
     saveProgress(m.id, pageInfo(i));
     bumpView(m.id);   // นับยอดวิวจริง (ครั้งเดียวต่อเรื่องต่อการเปิดเว็บ)
   }

@@ -47,6 +47,10 @@
         <div class="sec-h"><h2>ดูต่อจากที่ค้าง</h2></div>
         <div class="cont-row" id="contRow"></div>
       </div>
+      <div class="sec" id="sec-reco" style="display:none">
+        <div class="sec-h"><h2 id="recoHead"></h2></div>
+        <div class="cont-row" id="recoRow"></div>
+      </div>
       <div class="sec">
         <div class="sec-h"><h2>Top 10 ประจำวันนี้ 🔥</h2><span class="more" onclick="go('rank')" style="cursor:pointer">ทั้งหมด ›</span></div>
         <div class="rank-row" id="rankRow"></div>
@@ -114,6 +118,11 @@
         <div class="fav-empty" id="fav-empty">ยังไม่มีรายการโปรด — กด "บันทึก" ระหว่างดูเพื่อเก็บไว้ที่นี่</div>
         <div class="grid" id="gridFav"></div>
       </div>
+      <div class="sec">
+        <div class="sec-h"><h2>ประวัติการดู</h2></div>
+        <div class="fav-empty" id="hist-empty">ยังไม่มีประวัติ — เริ่มดูเรื่องแรกได้เลย</div>
+        <div class="grid" id="gridHist"></div>
+      </div>
       <div class="sec" style="padding-top:26px">
         <div class="prow" id="rowInstall" style="display:none" onclick="promptInstall()"><span class="ric" data-ic="download"></span> ติดตั้งเป็นแอป <span class="ar">›</span></div>
         <div class="prow" onclick="clearHistory();toast('ล้างประวัติการดูแล้ว')"><span class="ric" data-ic="clock"></span> ล้างประวัติการดู <span class="ar">›</span></div>
@@ -171,6 +180,10 @@
     </div>
   </div>
 
+  <!-- DETAIL SHEET -->
+  <div id="dtBg" onclick="closeDetail()"></div>
+  <div id="dtSheet"></div>
+
   <!-- BOTTOM NAV (มือถือ/แท็บเล็ต) -->
   <div id="nav">
     <button class="on" data-scr="home" onclick="go('home')"><span data-ic="home"></span>หน้าแรก</button>
@@ -210,6 +223,7 @@
 <script src="js/07-player.js"></script>
 <script src="js/08-sheet.js"></script>
 <script src="js/09-comments.js"></script>
+<script src="js/13-detail.js"></script>
 <script src="js/10-boot.js"></script>
 <script src="js/11-pwa.js"></script>
 <script src="js/12-hover.js"></script>

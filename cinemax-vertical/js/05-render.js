@@ -31,7 +31,10 @@ function cardHtml(m, extra){
 /* คลิกการ์ดที่ไหนก็ได้ → เปิด player (event delegation) */
 document.addEventListener('click', function(ev){
   var c = ev.target.closest('[data-id]');
-  if(c && !ev.target.closest('button')) openPlayer(c.getAttribute('data-id'));
+  if(!c || ev.target.closest('button')) return;
+  var id = c.getAttribute('data-id');
+  if(c.closest('#contRow') || c.closest('#gridHist')) openPlayer(id);  // ดูต่อ → เล่นทันที
+  else openDetail(id);                                                  // อื่นๆ → หน้ารายละเอียด
 });
 
 var activeCat = '';
@@ -59,7 +62,7 @@ function retryConnect(){
 }
 
 function renderAll(){
-  renderChips(); renderHero(); renderContinue();
+  renderChips(); renderHero(); renderContinue(); renderRecos();
   renderRank(); renderGrids(); renderRankFull(); renderProfile();
   var db = document.getElementById('demo-banner');
   if(db) db.style.display = ST.demo ? 'flex' : 'none';
@@ -249,6 +252,28 @@ function doSearch(q){
   list.slice(0, 60).forEach(function(m){ g.appendChild(el(cardHtml(m))); });
 }
 
+/* ── แนะนำตามประวัติ: "เพราะคุณดู ..." ── */
+function renderRecos(){
+  var sec = document.getElementById('sec-reco'); if(!sec) return;
+  var hist = continueList();
+  if(!hist.length){ sec.style.display = 'none'; return; }
+  var src = hist[0].m;
+  var tokens = (src.genre || '').split(/[·,/|]/).map(function(t){ return t.trim(); }).filter(Boolean);
+  var pool = ST.movies.filter(function(x){
+    if(x.id === src.id) return false;
+    var g = x.genre || '';
+    return tokens.some(function(t){ return g.indexOf(t) >= 0; });
+  }).sort(popSort);
+  if(pool.length < 3){ sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  document.getElementById('recoHead').textContent = 'เพราะคุณดู "' + displayTitle(src) + '"';
+  var row = document.getElementById('recoRow'); row.innerHTML = '';
+  pool.slice(0, 12).forEach(function(m){
+    row.appendChild(el('<div class="cont-card" data-id="' + esc(m.id) + '">' + posterHtml(m) +
+      '<div class="t">' + esc(displayTitle(m)) + '</div></div>'));
+  });
+}
+
 /* ── โปรไฟล์ ── */
 function renderProfile(){
   var h = getHist();
@@ -259,7 +284,22 @@ function renderProfile(){
   var favs = getFavs().map(function(id){ return ST.movies.find(function(m){ return m.id === id; }); }).filter(Boolean);
   document.getElementById('fav-empty').style.display = favs.length ? 'none' : 'block';
   favs.slice(0, 30).forEach(function(m){ g.appendChild(el(cardHtml(m))); });
+  renderHistory();
 }
 function clearHistory(){
-  lsSet(LS_HIST, {}); renderContinue(); renderProfile();
+  lsSet(LS_HIST, {}); renderContinue(); renderProfile(); renderRecos();
+}
+
+/* ── ประวัติการดูทั้งหมด (หน้าโปรไฟล์) ── */
+function renderHistory(){
+  var g = document.getElementById('gridHist'); if(!g) return;
+  g.innerHTML = '';
+  var list = continueList();
+  document.getElementById('hist-empty').style.display = list.length ? 'none' : 'block';
+  list.slice(0, 30).forEach(function(x){
+    var label = x.m.type === 'series' && x.p.s ? ('S' + x.p.s + ' EP ' + x.p.e) : 'ดูค้างไว้';
+    g.appendChild(el('<div class="gcard" data-id="' + esc(x.m.id) + '">' +
+      posterHtml(x.m, '<span class="prog"><i style="width:' + Math.min(Math.max(x.p.pct || 5, 3), 100) + '%"></i></span>') +
+      '<div class="t">' + esc(displayTitle(x.m)) + '</div><div class="s" style="color:var(--rose)">' + label + '</div></div>'));
+  });
 }

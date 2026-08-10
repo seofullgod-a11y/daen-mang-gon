@@ -18,6 +18,7 @@ window.addEventListener('popstate', function(){
   if(top.t === 'cmt') closeComments(true);
   else if(top.t === 'sheet') closeSheet(true);
   else if(top.t === 'player') closePlayer(true);
+  else if(top.t === 'dt') closeDetail(true);
   else if(top.t === 'scr') go(top.from, true);
 });
 
