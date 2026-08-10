@@ -240,14 +240,57 @@ function renderRankFull(){
   });
 }
 
-/* ── ค้นหา ── */
+/* ── ค้นหา (fuzzy — พิมพ์ผิด/ตกหล่นก็เจอ) ── */
+function normTxt(str){
+  return String(str || '').toLowerCase()
+    .replace(/[\u0E47-\u0E4E]/g, '')   // ตัดวรรณยุกต์/ไม้ไต่คู้ ไทย
+    .replace(/\s+/g, '');
+}
+function levCap(a, b, cap){
+  if(Math.abs(a.length - b.length) > cap) return cap + 1;
+  var prev = [], cur = [];
+  for(var j = 0; j <= b.length; j++) prev[j] = j;
+  for(var i = 1; i <= a.length; i++){
+    cur[0] = i; var rowMin = i;
+    for(var j2 = 1; j2 <= b.length; j2++){
+      var cost = a.charAt(i-1) === b.charAt(j2-1) ? 0 : 1;
+      cur[j2] = Math.min(prev[j2] + 1, cur[j2-1] + 1, prev[j2-1] + cost);
+      if(cur[j2] < rowMin) rowMin = cur[j2];
+    }
+    if(rowMin > cap) return cap + 1;
+    var t = prev; prev = cur; cur = t;
+  }
+  return prev[b.length];
+}
+function movieScore(m, Q){
+  var H = normTxt(displayTitle(m) + ' ' + m.title + ' ' + m.titleTh + ' ' + m.genre + ' ' + m.cast + ' ' + m.dir);
+  var idx = H.indexOf(Q);
+  if(idx >= 0) return 100 - Math.min(idx, 20);          // เจอตรงๆ
+  var T = normTxt(displayTitle(m) + ' ' + m.title);
+  var cap = Q.length <= 4 ? 1 : (Q.length <= 8 ? 2 : 3);   // ยอมพิมพ์ผิดตามความยาว
+  var best = cap + 1;
+  var span = Q.length;
+  for(var i = 0; i + span - cap <= T.length; i++){
+    var d = levCap(T.substr(i, span), Q, cap);
+    if(d < best){ best = d; if(best === 0) break; }
+  }
+  return best <= cap ? (60 - best * 12) : 0;
+}
 function doSearch(q){
   var g = document.getElementById('gridSearch'), hd = document.getElementById('searchHead');
   g.innerHTML = '';
-  q = (q || '').trim().toLowerCase();
-  var list = !q ? ST.movies.slice(0, 12) : ST.movies.filter(function(m){
-    return (m.title + ' ' + m.titleTh + ' ' + m.genre + ' ' + m.cast + ' ' + m.dir).toLowerCase().indexOf(q) >= 0;
-  });
+  q = (q || '').trim();
+  var list;
+  if(!q){
+    list = ST.movies.slice(0, 12);
+  } else {
+    var Q = normTxt(q);
+    list = ST.movies
+      .map(function(m){ return { m: m, sc: movieScore(m, Q) }; })
+      .filter(function(x){ return x.sc > 0; })
+      .sort(function(a, b){ return b.sc - a.sc || popSort(a.m, b.m); })
+      .map(function(x){ return x.m; });
+  }
   hd.textContent = q ? ('ผลการค้นหา "' + q + '" (' + list.length + ')') : 'ยอดนิยม';
   list.slice(0, 60).forEach(function(m){ g.appendChild(el(cardHtml(m))); });
 }

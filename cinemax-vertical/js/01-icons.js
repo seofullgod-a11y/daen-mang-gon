@@ -33,7 +33,9 @@ var IC = {
   shuffle:     fi('shuffle', 18),
   mute:        fi('speaker_slash_fill', 20),
   sound:       fi('speaker_2_fill', 20),
-  xmark:       fi('xmark', 16),
+   mic:         fi('mic_fill', 19),
+  pip:         fi('rectangle_on_rectangle', 20),
+ xmark:       fi('xmark', 16),
   forward:     fi('forward_fill', 15)
 };
 

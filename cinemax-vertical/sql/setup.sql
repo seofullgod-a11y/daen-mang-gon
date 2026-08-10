@@ -70,3 +70,11 @@ create policy "comments insert" on public.comments
     and char_length(nick) between 1 and 30
   );
 -- ไม่มี policy update/delete → แก้/ลบได้จากหลังบ้าน (service_role) เท่านั้น
+
+-- ── 3) สิทธิ์การเข้าถึง (กันเคสโปรเจกต์ที่ default privileges ไม่ครบ) ──
+grant select on public.stats to anon, authenticated;
+grant select, insert on public.comments to anon, authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;
+
+-- แจ้ง PostgREST ให้รีโหลด schema ทันที (ไม่ต้องรอ)
+notify pgrst, 'reload schema';

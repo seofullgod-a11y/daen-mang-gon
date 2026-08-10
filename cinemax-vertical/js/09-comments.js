@@ -18,9 +18,12 @@ function openComments(){
   }
   fetch(SB_URL + '/rest/v1/comments?select=*&movie_id=eq.' + encodeURIComponent(m.id) +
         '&order=created_at.desc&limit=60', { headers: sbHeaders() })
-    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(r){
+      if(r.status === 404){ renderCmtSetupNote(); return null; }
+      return r.ok ? r.json() : [];
+    })
     .catch(function(){ return []; })
-    .then(renderComments);
+    .then(function(rows){ if(rows) renderComments(rows); });
 }
 
 function closeComments(fromPop){
@@ -29,6 +32,13 @@ function closeComments(fromPop){
   if(!fromPop && top && top.t === 'cmt'){ history.back(); return; }
   document.getElementById('cmtSheetbg').classList.remove('on');
   document.getElementById('cmtSheet').classList.remove('on');
+}
+
+function renderCmtSetupNote(){
+  document.getElementById('cmtList').innerHTML =
+    '<div class="cmt-empty">⚙️ ระบบคอมเมนต์ยังไม่ได้ติดตั้ง<br><br>' +
+    'เจ้าของเว็บ: เปิด Supabase Dashboard → SQL Editor<br>' +
+    'วางเนื้อหาไฟล์ <b>sql/setup.sql</b> แล้วกด Run ครั้งเดียว</div>';
 }
 
 function renderComments(rows){
@@ -78,7 +88,14 @@ function sendComment(){
     headers: Object.assign({ 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, sbHeaders()),
     body: JSON.stringify(payload)
   })
-  .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(r){
+    if(!r.ok){
+      return r.text().then(function(t){
+        var e = new Error('HTTP ' + r.status); e.status = r.status; e.body = t; throw e;
+      });
+    }
+    return r.json();
+  })
   .then(function(rows){
     var c = rows[0] || Object.assign({ created_at: new Date().toISOString() }, payload);
     var list = document.getElementById('cmtList');
@@ -88,6 +105,12 @@ function sendComment(){
     bodyEl.value = '';
     toast('ส่งคอมเมนต์แล้ว 💬');
   })
-  .catch(function(){ toast('ส่งไม่สำเร็จ ลองใหม่อีกครั้ง'); })
+  .catch(function(e){
+    console.error('comment post failed:', e && e.status, e && e.body);
+    if(e && e.status === 404){ toast('ยังไม่ได้ติดตั้งระบบคอมเมนต์ — รัน sql/setup.sql ใน Supabase'); renderCmtSetupNote(); }
+    else if(e && (e.status === 401 || e.status === 403)) toast('สิทธิ์ไม่พอ — ตรวจ RLS ของตาราง comments');
+    else if(e && e.status === 400) toast('ข้อมูลไม่ผ่านเงื่อนไข — ตรวจความยาวข้อความ');
+    else toast('ส่งไม่สำเร็จ ลองใหม่อีกครั้ง');
+  })
   .then(function(){ btn.disabled = false; });
 }

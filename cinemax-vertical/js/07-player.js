@@ -153,6 +153,9 @@ function mountMedia(i){
     document.getElementById('muteBtn').style.display = 'grid';
     var sb = document.getElementById('speedBtn');
     sb.style.display = 'grid'; sb.textContent = _speed + 'x';
+    var pb = document.getElementById('pipBtn');
+    var pipOk = (document.pictureInPictureEnabled && v.requestPictureInPicture) || v.webkitSetPresentationMode;
+    pb.style.display = pipOk ? 'grid' : 'none';
     updateMuteBtn();
   } else {
     var f = document.createElement('iframe');
@@ -161,6 +164,7 @@ function mountMedia(i){
     md.appendChild(f);
     document.getElementById('muteBtn').style.display = 'none';
     document.getElementById('speedBtn').style.display = 'none';
+    document.getElementById('pipBtn').style.display = 'none';
     document.getElementById('progFill').style.width = '0%';
   }
 }
@@ -210,6 +214,23 @@ function attachGestures(page){
   });
   page.addEventListener('pointercancel', endHold);
   page.addEventListener('pointerleave', endHold);
+}
+
+/* ── มินิเพลเยอร์ (Picture-in-Picture) ── */
+function togglePiP(){
+  var v = curVideo(); if(!v){ toast('ใช้ได้กับวิดีโอแบบ HLS/MP4'); return; }
+  try{
+    if(document.pictureInPictureElement){
+      document.exitPictureInPicture().catch(function(){});
+    } else if(v.requestPictureInPicture){
+      v.requestPictureInPicture().catch(function(){ toast('อุปกรณ์นี้ไม่รองรับจอลอย'); });
+    } else if(v.webkitSetPresentationMode){
+      v.webkitSetPresentationMode(
+        v.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture');
+    } else {
+      toast('อุปกรณ์นี้ไม่รองรับจอลอย');
+    }
+  }catch(e){ toast('อุปกรณ์นี้ไม่รองรับจอลอย'); }
 }
 
 function cycleSpeed(){

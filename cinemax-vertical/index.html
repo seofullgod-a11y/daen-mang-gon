@@ -22,6 +22,12 @@
 <body>
 <div id="app">
 
+  <!-- INTRO SPLASH -->
+  <div id="intro">
+    <span class="in-seal">剧</span>
+    <span class="in-logo"><b>Cine</b><em>Max</em><i class="in-shine"></i></span>
+  </div>
+
   <!-- LOADING -->
   <div id="loading"><div class="lg"><b>Cine</b><em style="font-style:normal;color:#e50914">Max</em></div><span class="spin"></span></div>
 
@@ -88,6 +94,7 @@
       <div class="searchbar">
         <span data-ic="search" style="color:var(--g3)"></span>
         <input id="searchInput" placeholder="ค้นหาชื่อเรื่อง, แนว, นักแสดง..." autocomplete="off">
+        <button id="micBtn" aria-label="ค้นหาด้วยเสียง" data-ic="mic"></button>
       </div>
     </div>
     <div class="wrap">
@@ -139,6 +146,7 @@
       <div class="pl-tt" id="plTitle">—<small id="plSub"></small></div>
       <button id="muteBtn" onclick="toggleMute()" aria-label="เปิด/ปิดเสียง"></button>
       <button id="speedBtn" onclick="cycleSpeed()" aria-label="ความเร็ว">1x</button>
+      <button id="pipBtn" onclick="togglePiP()" aria-label="จอลอย" data-ic="pip"></button>
     </div>
     <div id="fastInd"><span data-ic="forward"></span> กำลังเร่ง 2x</div>
     <div class="pl-arrows">
@@ -224,6 +232,7 @@
 <script src="js/08-sheet.js"></script>
 <script src="js/09-comments.js"></script>
 <script src="js/13-detail.js"></script>
+<script src="js/14-extras.js"></script>
 <script src="js/10-boot.js"></script>
 <script src="js/11-pwa.js"></script>
 <script src="js/12-hover.js"></script>
