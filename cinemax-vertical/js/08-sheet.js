@@ -23,11 +23,23 @@ function openSheet(){
       g.innerHTML = '';
       FEED.forEach(function(p, i){
         if(p.ep.season !== s) return;
+        var e = p.ep;
         var watched = false;
         var h = getHist()[m.id];
-        if(h && (h.s < s || (h.s === s && h.e > p.ep.ep))) watched = true;
-        var cls = 'ep-cell' + (i === curIdx ? ' cur' : (watched ? ' watched' : ''));
-        var cell = el('<div class="' + cls + '">' + p.ep.ep + '</div>');
+        if(h && h.s != null && (h.s > s || (h.s === s && h.e > e.ep))) watched = true;
+        var cur = (i === curIdx);
+        var th = e.thumb
+          ? '<img loading="lazy" src="' + esc(e.thumb) + '" referrerpolicy="no-referrer" alt="" onerror="this.remove()">'
+          : '';
+        var cell = el('<div class="epc' + (cur ? ' cur' : '') + (watched ? ' watched' : '') + '">' +
+          '<div class="epc-th" style="' + art(m.id, e.ep * 3 + 1) + '">' + th +
+            '<span class="epc-n">EP ' + e.ep + '</span>' +
+            (e.dur ? '<span class="epc-d">' + fmtTime(e.dur) + '</span>' : '') +
+            (cur ? '<span class="epc-play">' + IC.play + '</span>' : '') +
+            (watched && !cur ? '<span class="epc-w">✓</span>' : '') +
+          '</div>' +
+          (e.title ? '<div class="epc-t">' + esc(e.title) + '</div>' : '') +
+          '</div>');
         cell.addEventListener('click', function(){ jumpTo(i); closeSheet(); });
         g.appendChild(cell);
       });
