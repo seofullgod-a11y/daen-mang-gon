@@ -2,6 +2,7 @@
 
 function openSheet(){
   if(!FEED.length) return;
+  if(FEED[curIdx] && (FEED[curIdx].loading || FEED[curIdx].empty)) return;
   var isSeries = !!(FEED[curIdx] && FEED[curIdx].ep);
   var m = FEED[curIdx].m;
   document.getElementById('sheetTitle').textContent = displayTitle(m);

@@ -14,7 +14,7 @@ function posterHtml(m, extra){
       '<span class="glyph">' + esc(displayTitle(m).charAt(0)) + '</span>';
   }
   var vw = viewsOf(m);
-  var pv = vw > 0 ? (IC.eye + ' ' + fmtCount(vw))
+  var pv = vw >= 10 ? (IC.eye + ' ' + fmtCount(vw))
     : (m.rating ? (IC.star + ' ' + m.rating.toFixed(1)) : (m.year || ''));
   var isNew = m.added && (Date.now() - new Date(m.added).getTime()) < 14 * 86400000;
   var badge = m.coming ? '<span class="badge cs">เร็วๆ นี้</span>' : (isNew ? '<span class="badge new">NEW</span>' : '');
@@ -103,7 +103,7 @@ function renderHero(){
   var bgHtml = list.map(function(m, i){
     var src = m.bg || m.poster;
     return src
-      ? '<img class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" referrerpolicy="no-referrer" src="' + esc(src) + '" alt="">'
+      ? '<img class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" referrerpolicy="no-referrer" src="' + esc(src) + '" alt="" onerror="this.style.visibility=\'hidden\'">'
       : '<div class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" style="' + art(m.id,5) + '"></div>';
   }).join('');
 

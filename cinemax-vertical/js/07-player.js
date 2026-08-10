@@ -246,7 +246,10 @@ function activate(i){
   document.getElementById('plSub').textContent = sub;
 
   /* epbar */
-  if(p.ep){
+  if(p.loading || p.empty){
+    document.getElementById('epCurTxt').textContent = '–';
+    document.getElementById('epTotTxt').textContent = '–';
+  } else if(p.ep){
     document.getElementById('epCurTxt').textContent = 'EP ' + p.ep.ep;
     document.getElementById('epTotTxt').textContent = FEED.length;
   } else {
