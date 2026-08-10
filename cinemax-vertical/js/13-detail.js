@@ -46,6 +46,9 @@ function openDetail(id){
     '</div>';
 
   if(!document.getElementById('dtSheet').classList.contains('on')) navPush({ t: 'dt' });
+  var overPlayer = document.getElementById('player').classList.contains('on');
+  document.getElementById('dtBg').classList.toggle('over', overPlayer);
+  document.getElementById('dtSheet').classList.toggle('over', overPlayer);
   document.getElementById('dtBg').classList.add('on');
   document.getElementById('dtSheet').classList.add('on');
 
@@ -66,23 +69,42 @@ function openDetail(id){
             '<span class="epc-n">EP ' + e.ep + '</span>' +
             (e.dur ? '<span class="epc-d">' + fmtTime(e.dur) + '</span>' : '') + '</div>' +
           (e.title ? '<div class="epc-t">' + esc(e.title) + '</div>' : '') + '</div>');
-        cell.addEventListener('click', function(){ openPlayer(m.id, { s: e.season, e: e.ep }); });
+        cell.addEventListener('click', function(){
+          dtGo(function(){ openPlayer(m.id, { s: e.season, e: e.ep }); });
+        });
         box.appendChild(cell);
       });
     });
   }
 }
 
+var _dtAfter = null;
 function closeDetail(fromPop){
   if(!document.getElementById('dtSheet').classList.contains('on')) return;
   var top = navTop();
   if(!fromPop && top && top.t === 'dt'){ history.back(); return; }
   document.getElementById('dtBg').classList.remove('on');
   document.getElementById('dtSheet').classList.remove('on');
+  document.getElementById('dtBg').classList.remove('over');
+  document.getElementById('dtSheet').classList.remove('over');
   _dtMovie = null;
+  var fn = _dtAfter; _dtAfter = null;
+  if(fn) setTimeout(fn, 0);
 }
 
-function dtPlay(){ if(_dtMovie) openPlayer(_dtMovie.id); }
+/* ปิด detail ให้เรียบร้อยก่อน แล้วค่อยทำ action (เล่น/ตัวอย่าง) */
+function dtGo(fn){
+  var top = navTop();
+  if(document.getElementById('dtSheet').classList.contains('on') && top && top.t === 'dt'){
+    _dtAfter = fn; history.back();
+  } else { fn(); }
+}
+
+function dtPlay(){
+  if(!_dtMovie) return;
+  var id = _dtMovie.id;
+  dtGo(function(){ openPlayer(id); });
+}
 function dtFav(){
   if(!_dtMovie) return;
   var on = toggleFav(_dtMovie.id);
@@ -100,6 +122,13 @@ function dtShare(){
 /* เล่นตัวอย่าง (ไม่นับวิว/ไม่บันทึกประวัติ) */
 function openTrailer(){
   var m = _dtMovie; if(!m || !m.trailer) return;
+  if(document.getElementById('dtSheet').classList.contains('over')){
+    dtGo(function(){ _openTrailerFor(m); });   // detail ทับ player อยู่ → ปิดก่อน
+  } else {
+    _openTrailerFor(m);                        // จากหน้าแรก → player ทับ detail ปิดแล้วกลับมา
+  }
+}
+function _openTrailerFor(m){
   CUR = m;
   var wasOpen = document.getElementById('player').classList.contains('on');
   document.getElementById('player').classList.add('on');

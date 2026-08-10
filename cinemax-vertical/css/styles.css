@@ -251,7 +251,7 @@ svg{display:block}
 .rail .act.faved .ic{color:var(--gold);border-color:rgba(229,9,20,.5);background:rgba(229,9,20,.14)}
 .rail .act.faved .ic svg{fill:var(--gold)}
 .rail .act .n{font-size:.66rem;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.8)}
-.rail .avatar{width:47px;height:47px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;position:relative;
+.rail .avatar{width:47px;height:47px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;position:relative;cursor:pointer;
   box-shadow:0 0 0 2px rgba(0,0,0,.35), 0 6px 18px rgba(0,0,0,.5)}
 
 /* caption */
@@ -349,6 +349,8 @@ svg{display:block}
 /* ── DETAIL SHEET ────────────────────────────────── */
 #dtBg{position:fixed;inset:0;z-index:54;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s}
 #dtBg.on{opacity:1;pointer-events:auto}
+#dtBg.over{z-index:84}
+#dtSheet.over{z-index:85}
 #dtSheet{position:fixed;left:0;right:0;bottom:0;z-index:55;max-height:88%;
   background:#141414;border-radius:22px 22px 0 0;overflow:hidden;
   transform:translateY(105%);transition:transform .32s cubic-bezier(.3,.9,.3,1);
@@ -391,22 +393,7 @@ svg{display:block}
   color:var(--g3);font-size:.64rem;font-weight:600}
 #nav button.on{color:var(--w)}
 #nav button.on svg{color:var(--red);filter:drop-shadow(0 0 8px rgba(229,9,20,.55))}
-#nav .center-btn{position:relative;top:-15px;gap:3px}
-#nav .center-btn .cb{width:58px;height:58px;flex-shrink:0;border-radius:50%;
-  background:linear-gradient(135deg,#ff2c38,var(--red) 45%,var(--redD));
-  display:grid;place-items:center;color:#fff;border:3px solid rgba(255,255,255,.2);
-  box-shadow:0 12px 30px rgba(229,9,20,.55), inset 0 2px 0 rgba(255,255,255,.35);
-  animation:pplay 2.4s ease-out infinite}
-#nav .center-btn .cb svg{width:27px;height:27px;margin-left:3px}
-#nav .center-btn .cb .f7-icons{font-size:26px!important;margin-left:3px}
-#nav .center-btn .cbl{font-size:.62rem;font-weight:800;
-  background:linear-gradient(120deg,var(--gold),var(--gold2));
-  -webkit-background-clip:text;background-clip:text;color:transparent}
-#nav .center-btn:active .cb{transform:scale(.92)}
-@keyframes pplay{
-  0%,100%{box-shadow:0 12px 30px rgba(229,9,20,.55), 0 0 0 0 rgba(229,9,20,.4), inset 0 2px 0 rgba(255,255,255,.35)}
-  60%{box-shadow:0 12px 30px rgba(229,9,20,.55), 0 0 0 14px rgba(229,9,20,0), inset 0 2px 0 rgba(255,255,255,.35)}
-}
+#nav .center-btn:active{transform:scale(.94)}
 
 /* profile */
 .prof-hd{padding:28px 20px 18px;display:flex;align-items:center;gap:15px}

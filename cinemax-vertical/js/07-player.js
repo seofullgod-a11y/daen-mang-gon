@@ -292,7 +292,7 @@ function buildRail(m){
     ? '<img src="' + esc(m.poster) + '" referrerpolicy="no-referrer" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'
     : '<div style="position:absolute;inset:0;' + art(m.id,2) + '"></div>';
   document.getElementById('rail').innerHTML =
-    '<div class="avatar">' + avatar + '</div>' +
+    '<div class="avatar" role="button" aria-label="รายละเอียดเรื่อง" onclick="event.stopPropagation();openDetail(\'' + esc(m.id) + '\')">' + avatar + '</div>' +
     '<button class="act' + (liked ? ' liked' : '') + '" id="btnLike"><div class="ic">' + (liked ? IC.heartFill : IC.heart) + '</div><div class="n">' + likeLabel(m, liked) + '</div></button>' +
     '<button class="act" id="btnCmt"><div class="ic">' + IC.chat + '</div><div class="n">คอมเมนต์</div></button>' +
     '<button class="act' + (faved ? ' faved' : '') + '" id="btnFav"><div class="ic">' + (faved ? IC.bookmarkFill : IC.bookmark) + '</div><div class="n">' + (faved ? 'บันทึกแล้ว' : 'บันทึก') + '</div></button>' +
@@ -403,6 +403,7 @@ document.addEventListener('keydown', function(ev){
   if(ev.key === 'Escape'){
     if(document.getElementById('cmtSheet').classList.contains('on')) closeComments();
     else if(document.getElementById('sheet').classList.contains('on')) closeSheet();
+    else if(document.getElementById('dtSheet').classList.contains('on')) closeDetail();
     else closePlayer();
   }
   else if(ev.key === 'ArrowDown'){ ev.preventDefault(); if(curIdx < FEED.length - 1) jumpTo(curIdx + 1); }
