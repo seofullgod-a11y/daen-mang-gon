@@ -71,6 +71,7 @@ function closePlayer(fromPop){
   document.getElementById('player').classList.remove('on');
   document.body.classList.remove('player-open');
   unmountAll(); closeSheet(true); closeComments(true);
+  if(typeof liveLeave === 'function') liveLeave();
   CUR = null; FEED = [];
   renderContinue(); renderProfile();
   if(typeof renderRecos === 'function') renderRecos();
@@ -204,6 +205,7 @@ function attachGestures(page){
         }
       }
       heartBurstAt(ev.clientX, ev.clientY);
+      if(typeof sendReact === 'function') sendReact('❤️');
     } else {
       tapTimer = setTimeout(function(){   // แตะครั้งเดียว → หยุด/เล่น
         tapTimer = null;
@@ -288,6 +290,7 @@ function activate(i){
   if(!p.loading && !p.empty && !p.trailerUrl){
     saveProgress(m.id, pageInfo(i));
     bumpView(m.id);   // นับยอดวิวจริง (ครั้งเดียวต่อเรื่องต่อการเปิดเว็บ)
+    if(typeof liveJoin === 'function') liveJoin(m.id);   // เข้าห้อง live ของเรื่องนี้
   }
 }
 
@@ -325,7 +328,7 @@ function buildRail(m){
     bumpLike(m.id, on ? 1 : -1);
     this.querySelector('.ic').innerHTML = on ? IC.heartFill : IC.heart;
     this.querySelector('.n').textContent = likeLabel(m, on);
-    if(on) heartBurst();
+    if(on){ heartBurst(); if(typeof sendReact === 'function') sendReact('❤️'); }
   });
   document.getElementById('btnCmt').addEventListener('click', function(ev){
     ev.stopPropagation(); openComments();

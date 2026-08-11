@@ -114,9 +114,11 @@ function dtFav(){
 }
 function dtShare(){
   if(!_dtMovie) return;
-  var url = location.href.split('#')[0] + '#' + encodeURIComponent(_dtMovie.id);
-  if(navigator.share){ navigator.share({ title: displayTitle(_dtMovie), url: url }).catch(function(){}); }
-  else { navigator.clipboard && navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว'); }
+  if(typeof shareCard === 'function') shareCard(_dtMovie);
+  else {
+    var url = location.href.split('#')[0] + '#' + encodeURIComponent(_dtMovie.id);
+    navigator.clipboard && navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว');
+  }
 }
 
 /* เล่นตัวอย่าง (ไม่นับวิว/ไม่บันทึกประวัติ) */

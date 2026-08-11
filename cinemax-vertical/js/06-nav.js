@@ -15,7 +15,8 @@ function navPush(entry){
 window.addEventListener('popstate', function(){
   var top = NAVSTACK.pop();
   if(!top) return;
-  if(top.t === 'cmt') closeComments(true);
+  if(top.t === 'pt') closePartySheet(true);
+  else if(top.t === 'cmt') closeComments(true);
   else if(top.t === 'sheet') closeSheet(true);
   else if(top.t === 'player') closePlayer(true);
   else if(top.t === 'dt') closeDetail(true);

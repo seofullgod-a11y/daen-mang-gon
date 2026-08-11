@@ -35,6 +35,8 @@ var IC = {
   sound:       fi('speaker_2_fill', 20),
    mic:         fi('mic_fill', 19),
   pip:         fi('rectangle_on_rectangle', 20),
+  party:       fi('person_2_fill', 20),
+  explore:     fi('square_grid_2x2_fill', 21),
  xmark:       fi('xmark', 16),
   forward:     fi('forward_fill', 15)
 };

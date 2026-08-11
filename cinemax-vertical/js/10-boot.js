@@ -15,9 +15,12 @@
   loadMovies().then(function(){ return loadStats(); }).then(function(){
     renderAll();
 
-    /* เปิดจากลิงก์แชร์ #movieId */
+    /* เปิดจากลิงก์แชร์ #movieId หรือ #party=CODE */
     var h = decodeURIComponent((location.hash || '').slice(1));
-    if(h && ST.movies.some(function(m){ return m.id === h; })){
+    if(h.indexOf('party=') === 0){
+      var pc = h.slice(6).toUpperCase();
+      if(pc && typeof partyJoin === 'function') setTimeout(function(){ partyJoin(pc); }, 600);
+    } else if(h && ST.movies.some(function(m){ return m.id === h; })){
       openPlayer(h);
     }
   });

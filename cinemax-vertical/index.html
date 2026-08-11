@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="fonts/framework7-icons.css">
 <link rel="stylesheet" href="css/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -37,7 +38,7 @@
       <div class="logo" onclick="go('home')"><span class="seal">剧</span><b>Cine</b><em>Max</em></div>
       <div class="toplinks">
         <button class="on" data-scr="home" onclick="go('home')">หน้าแรก</button>
-        <button data-scr="rank" onclick="go('rank')">ชาร์ต</button>
+        <button data-scr="rank" onclick="go('rank')">สำรวจ</button>
         <button data-scr="search" onclick="go('search')">ค้นหา</button>
         <button data-scr="me" onclick="go('me')">ของฉัน</button>
       </div>
@@ -75,16 +76,19 @@
   <!-- RANKING -->
   <div class="screen" id="scr-rank">
     <div id="topbar">
-      <div class="logo" onclick="go('home')"><span class="seal">榜</span><b>ชาร์ต</b><em>ความนิยม</em></div>
+      <div class="logo" onclick="go('home')"><span class="seal">榜</span><b>สำรวจ</b><em>ทั้งหมด</em></div>
       <div class="toplinks">
         <button data-scr="home" onclick="go('home')">หน้าแรก</button>
-        <button class="on" data-scr="rank" onclick="go('rank')">ชาร์ต</button>
+        <button class="on" data-scr="rank" onclick="go('rank')">สำรวจ</button>
         <button data-scr="search" onclick="go('search')">ค้นหา</button>
         <button data-scr="me" onclick="go('me')">ของฉัน</button>
       </div>
       <div class="sp"></div>
     </div>
-    <div class="wrap"><div class="sec" style="padding-top:6px"><div id="rankFull"></div></div></div>
+    <div class="wrap">
+      <div id="exploreRows"></div>
+      <div class="sec"><div class="sec-h"><h2>🔥 ชาร์ตความนิยม</h2></div><div id="rankFull"></div></div>
+    </div>
   </div>
 
   <!-- SEARCH -->
@@ -108,7 +112,7 @@
       <div class="logo" onclick="go('home')"><span class="seal">我</span><b>ของ</b><em>ฉัน</em></div>
       <div class="toplinks">
         <button data-scr="home" onclick="go('home')">หน้าแรก</button>
-        <button data-scr="rank" onclick="go('rank')">ชาร์ต</button>
+        <button data-scr="rank" onclick="go('rank')">สำรวจ</button>
         <button data-scr="search" onclick="go('search')">ค้นหา</button>
         <button class="on" data-scr="me" onclick="go('me')">ของฉัน</button>
       </div>
@@ -147,8 +151,11 @@
       <button id="muteBtn" onclick="toggleMute()" aria-label="เปิด/ปิดเสียง"></button>
       <button id="speedBtn" onclick="cycleSpeed()" aria-label="ความเร็ว">1x</button>
       <button id="pipBtn" onclick="togglePiP()" aria-label="จอลอย" data-ic="pip"></button>
+      <button id="ptBtn" onclick="openPartySheet()" aria-label="ดูพร้อมกัน" data-ic="party"></button>
     </div>
     <div id="fastInd"><span data-ic="forward"></span> กำลังเร่ง 2x</div>
+    <div id="liveBadge" style="display:none">🔴 <span>0</span> กำลังดูอยู่</div>
+    <div id="reactLayer"></div>
     <div class="pl-arrows">
       <button id="arrPrev" onclick="jumpTo(curIdx-1)" aria-label="ตอนก่อนหน้า" data-ic="chevUp"></button>
       <button id="arrNext" onclick="jumpTo(curIdx+1)" aria-label="ตอนถัดไป" data-ic="chevDown"></button>
@@ -192,10 +199,17 @@
   <div id="dtBg" onclick="closeDetail()"></div>
   <div id="dtSheet"></div>
 
+  <!-- WATCH PARTY SHEET -->
+  <div id="ptBg" onclick="closePartySheet()"></div>
+  <div id="ptSheet">
+    <div class="sheet-h"><h3>🎉 Watch Party</h3><span class="x" onclick="closePartySheet()" data-ic="xmark"></span></div>
+    <div id="ptBody"></div>
+  </div>
+
   <!-- BOTTOM NAV (มือถือ/แท็บเล็ต) -->
   <div id="nav">
     <button class="on" data-scr="home" onclick="go('home')"><span data-ic="home"></span>หน้าแรก</button>
-    <button data-scr="rank" onclick="go('rank')"><span data-ic="trophy"></span>ชาร์ต</button>
+    <button data-scr="rank" onclick="go('rank')"><span data-ic="explore"></span>สำรวจ</button>
     <button class="center-btn" onclick="playRandom()" aria-label="สุ่มเล่น"><span data-ic="play"></span>เล่นเลย</button>
     <button data-scr="search" onclick="go('search')"><span data-ic="search"></span>ค้นหา</button>
     <button data-scr="me" onclick="go('me')"><span data-ic="user"></span>ฉัน</button>
@@ -233,6 +247,9 @@
 <script src="js/09-comments.js"></script>
 <script src="js/13-detail.js"></script>
 <script src="js/14-extras.js"></script>
+<script src="js/15-live.js"></script>
+<script src="js/16-party.js"></script>
+<script src="js/17-sharecard.js"></script>
 <script src="js/10-boot.js"></script>
 <script src="js/11-pwa.js"></script>
 <script src="js/12-hover.js"></script>

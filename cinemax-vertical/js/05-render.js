@@ -62,7 +62,7 @@ function retryConnect(){
 }
 
 function renderAll(){
-  renderChips(); renderHero(); renderContinue(); renderRecos();
+  renderChips(); renderHero(); renderContinue(); renderRecos(); renderExplore();
   renderRank(); renderGrids(); renderRankFull(); renderProfile();
   var db = document.getElementById('demo-banner');
   if(db) db.style.display = ST.demo ? 'flex' : 'none';
@@ -238,6 +238,32 @@ function renderRankFull(){
       (m.rating ? ' · ★ ' + m.rating.toFixed(1) : '') + '</div></div>' +
       (i < 3 ? '<div class="rl-fire">🔥</div>' : '') + '</div>'));
   });
+}
+
+/* ── หน้าสำรวจ: แถวโปสเตอร์ตามแนว (Netflix-style) ── */
+function renderExplore(){
+  var box = document.getElementById('exploreRows'); if(!box) return;
+  box.innerHTML = '';
+  var map = {};
+  ST.movies.forEach(function(m){
+    (m.genre || '').split(/[·,/|]/).forEach(function(g){
+      g = g.trim(); if(!g) return;
+      (map[g] = map[g] || []).push(m);
+    });
+  });
+  Object.keys(map)
+    .sort(function(a, b){ return map[b].length - map[a].length; })
+    .slice(0, 12)
+    .forEach(function(g){
+      var row = el('<div class="sec"><div class="sec-h"><h2>' + esc(g) + '</h2>' +
+        '<span class="more">' + map[g].length + ' เรื่อง</span></div><div class="cont-row"></div></div>');
+      var r = row.querySelector('.cont-row');
+      map[g].slice().sort(popSort).slice(0, 15).forEach(function(m){
+        r.appendChild(el('<div class="cont-card" data-id="' + esc(m.id) + '">' + posterHtml(m) +
+          '<div class="t">' + esc(displayTitle(m)) + '</div></div>'));
+      });
+      box.appendChild(row);
+    });
 }
 
 /* ── ค้นหา (fuzzy — พิมพ์ผิด/ตกหล่นก็เจอ) ── */
