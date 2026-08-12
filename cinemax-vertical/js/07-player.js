@@ -73,8 +73,11 @@ function closePlayer(fromPop){
   unmountAll(); closeSheet(true); closeComments(true);
   if(typeof liveLeave === 'function') liveLeave();
   CUR = null; FEED = [];
+  restoreSiteSEO();
   renderContinue(); renderProfile();
   if(typeof renderRecos === 'function') renderRecos();
+  var fn = _plAfter; _plAfter = null;
+  if(fn) setTimeout(fn, 0);
 }
 
 /* ── สร้าง feed ── */
@@ -124,9 +127,19 @@ function mountMedia(i){
     v.setAttribute('playsinline',''); v.preload = 'auto';
     v.playbackRate = _speed;
     md.appendChild(v);
-    if(c.kind === 'hls' && window.Hls && Hls.isSupported()){
-      _hls = new Hls({ maxBufferLength: 30 });
-      _hls.loadSource(c.src); _hls.attachMedia(v);
+    if(c.kind === 'hls'){
+      if(v.canPlayType('application/vnd.apple.mpegurl')){
+        v.src = c.src;                       // Safari เล่น HLS ได้เอง ไม่ต้องโหลดไลบรารี
+      } else {
+        (window.Hls ? Promise.resolve() : loadScript(HLS_CDN)).then(function(){
+          if(!document.body.contains(v)) return;   // สลับตอนไปแล้ว
+          if(window.Hls && Hls.isSupported()){
+            _hls = new Hls({ maxBufferLength: 30 });
+            _hls.loadSource(c.src); _hls.attachMedia(v);
+            v.play().catch(function(){});
+          } else { v.src = c.src; }
+        }).catch(function(){ v.src = c.src; });
+      }
     } else {
       v.src = c.src;
     }
@@ -287,6 +300,7 @@ function activate(i){
   var ap = document.getElementById('arrPrev'), an = document.getElementById('arrNext');
   if(ap){ ap.disabled = i <= 0; an.disabled = i >= FEED.length - 1; }
   buildRail(m); buildCaption(m, p);
+  applyWatchSEO(m, p);
   if(!p.loading && !p.empty && !p.trailerUrl){
     saveProgress(m.id, pageInfo(i));
     bumpView(m.id);   // นับยอดวิวจริง (ครั้งเดียวต่อเรื่องต่อการเปิดเว็บ)
@@ -342,20 +356,66 @@ function buildRail(m){
   });
   document.getElementById('btnShare').addEventListener('click', function(ev){
     ev.stopPropagation();
-    var url = location.href.split('#')[0] + '#' + encodeURIComponent(m.id);
+    var url = location.origin + location.pathname + '?m=' + encodeURIComponent(m.id);
     if(navigator.share){ navigator.share({ title: displayTitle(m), url: url }).catch(function(){}); }
     else { navigator.clipboard && navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว'); }
   });
 }
 
 function buildCaption(m, p){
-  var tags = (m.genre || '').split(/[·,/|]/).map(function(g){ return g.trim(); }).filter(Boolean).slice(0, 3);
-  var tagHtml = tags.map(function(t, i){ return '<span' + (i === 0 ? ' class="hl"' : '') + '>#' + esc(t) + '</span>'; }).join('');
+  /* แท็ก SEO: แนว + คีย์เวิร์ดจากหลังบ้าน (kw) — กดแล้วค้นหาคำนั้นได้ */
+  var raw = (m.genre || '').split(/[·,/|]/).concat((m.kw || '').split(','));
+  var seen = {}, tags = [];
+  raw.forEach(function(g){ g = g.trim(); if(g && !seen[g]){ seen[g] = 1; tags.push(g); } });
+  tags = tags.slice(0, 6);
+  var tagHtml = tags.map(function(t, i){
+    return '<span' + (i === 0 ? ' class="hl"' : '') + ' data-q="' + esc(t) +
+      '" onclick="event.stopPropagation();tagSearch(this.dataset.q)">#' + esc(t) + '</span>';
+  }).join('');
   var desc = (p.ep && p.ep.desc) || m.desc || '';
   if(desc.length > 120) desc = desc.slice(0, 120) + '…';
   document.getElementById('plBot').innerHTML =
     (tagHtml ? '<div class="pl-tags">' + tagHtml + '</div>' : '') +
     '<div class="pl-cap"><b>' + esc(displayTitle(m)) + '</b>' + (desc ? ' — ' + esc(desc) : '') + '</div>';
+}
+
+/* ── SEO: อัปเดต title/description/JSON-LD ตามเรื่องที่ดู ── */
+function applyWatchSEO(m, p){
+  if(p.loading || p.empty) return;
+  var epTxt = p.ep ? ' EP ' + p.ep.ep : '';
+  document.title = 'ดู ' + displayTitle(m) + epTxt + ' | CineMax';
+  var d = document.getElementById('mDesc');
+  if(d && m.desc) d.setAttribute('content', ('ดู ' + displayTitle(m) + epTxt + ' — ' + m.desc).slice(0, 155));
+  var ld = document.getElementById('ldVideo');
+  if(!ld){ ld = document.createElement('script'); ld.type = 'application/ld+json'; ld.id = 'ldVideo'; document.head.appendChild(ld); }
+  /* VideoObject = ชนิดที่ Google ใช้ทำ video rich results + พ่วง Movie/TVSeries */
+  var vid = { '@context': 'https://schema.org', '@type': 'VideoObject',
+    name: 'ดู ' + displayTitle(m) + epTxt,
+    description: (m.desc || ('ดู ' + displayTitle(m) + ' ออนไลน์ที่ CineMax')).slice(0, 300),
+    inLanguage: 'th' };
+  if(m.poster) vid.thumbnailUrl = m.poster;
+  if(m.added) vid.uploadDate = m.added;
+  if(m.genre) vid.genre = m.genre;
+  if(m.kw) vid.keywords = m.kw;
+  var work = { '@context': 'https://schema.org', '@type': m.type === 'series' ? 'TVSeries' : 'Movie',
+    name: displayTitle(m), description: m.desc || '', inLanguage: 'th' };
+  if(m.poster) work.image = m.poster;
+  if(m.year) work.dateCreated = String(m.year);
+  if(m.rating) work.aggregateRating = { '@type': 'AggregateRating', ratingValue: m.rating, bestRating: 10, ratingCount: Math.max(viewsOf(m), 1) };
+  ld.textContent = JSON.stringify([vid, work]);
+}
+function restoreSiteSEO(){
+  document.title = SITE.title;
+  var d = document.getElementById('mDesc'); if(d) d.setAttribute('content', SITE.desc);
+  var ld = document.getElementById('ldVideo'); if(ld) ld.remove();
+}
+
+/* กด tag ในหน้าเล่น → ปิด player แล้วค้นหาคำนั้น */
+var _plAfter = null;
+function tagSearch(q){
+  if(!q) return;
+  _plAfter = function(){ go('search'); var inp = document.getElementById('searchInput'); inp.value = q; doSearch(q); };
+  closePlayer();
 }
 
 function heartBurst(){ heartBurstAt(null, null); }

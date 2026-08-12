@@ -4,9 +4,21 @@
 <meta charset="UTF-8">
 <meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>CineMax — ซีรีส์สั้นแนวตั้ง</title>
-<meta name="description" content="ดูซีรีส์สั้นแนวตั้งและภาพยนตร์ อัปเดตทุกวัน">
+<title>CineMax — ดูซีรีส์สั้นแนวตั้ง อัปเดตทุกวัน</title>
+<meta name="description" id="mDesc" content="ดูซีรีส์สั้นแนวตั้งและภาพยนตร์ออนไลน์ อัปเดตทุกวัน ดูฟรีทุกอุปกรณ์">
+<meta name="keywords" id="mKw" content="ซีรีส์สั้น, ซีรีส์แนวตั้ง, ดูซีรีส์ออนไลน์, หนังออนไลน์, short drama">
 <meta name="theme-color" content="#0b0b0b">
+<link rel="canonical" id="mCanon" href="">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CineMax">
+<meta property="og:title" id="ogTitle" content="CineMax — ดูซีรีส์สั้นแนวตั้ง">
+<meta property="og:description" id="ogDesc" content="ดูซีรีส์สั้นแนวตั้งและภาพยนตร์ออนไลน์ อัปเดตทุกวัน">
+<meta property="og:image" id="ogImg" content="icons/icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://pugdpjixgwzpursmveht.supabase.co" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"CineMax","description":"ดูซีรีส์สั้นแนวตั้งและภาพยนตร์ออนไลน์ อัปเดตทุกวัน","inLanguage":"th"}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-180.png">
@@ -17,8 +29,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="fonts/framework7-icons.css">
 <link rel="stylesheet" href="css/styles.css">
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest/dist/hls.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -70,7 +80,17 @@
         <div class="sec-h"><h2>แนะนำสำหรับคุณ</h2></div>
         <div class="grid" id="gridRec"></div>
       </div>
+      <div class="sec" id="sec-articles" style="display:none">
+        <div class="sec-h"><h2>📖 บทความจาก CineMax</h2></div>
+        <div class="art-list" id="homeArticles"></div>
+      </div>
     </div>
+  </div>
+
+  <!-- ARTICLE VIEW -->
+  <div id="artView">
+    <button class="art-back icobtn" onclick="closeArticle()" aria-label="กลับ" data-ic="back"></button>
+    <article class="art-page" id="artBody"></article>
   </div>
 
   <!-- RANKING -->

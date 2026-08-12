@@ -7,7 +7,7 @@ function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace
 function posterHtml(m, extra){
   var inner;
   if(m.poster){
-    inner = '<img class="art" loading="lazy" referrerpolicy="no-referrer" src="' + esc(m.poster) + '" alt="" ' +
+    inner = '<img class="art" loading="lazy" decoding="async" referrerpolicy="no-referrer" src="' + esc(m.poster) + '" alt="" ' +
       'onerror="this.outerHTML=\'<div class=&quot;art&quot; style=&quot;' + art(m.id,9) + '&quot;></div>\'">';
   } else {
     inner = '<div class="art" style="' + art(m.id,9) + '"></div>' +
@@ -61,9 +61,35 @@ function retryConnect(){
   });
 }
 
+/* ── Lazy render: ยังไม่เลื่อนถึง = ยังไม่สร้าง DOM (เร็ว + ประหยัด) ── */
+var _lazyDone = {};
+function lazyRender(key, elId, fn){
+  if(_lazyDone[key]){ fn(); return; }
+  var elm = document.getElementById(elId);
+  if(!elm || !('IntersectionObserver' in window)){ _lazyDone[key] = 1; fn(); return; }
+  if(elm._io) elm._io.disconnect();
+  var io = new IntersectionObserver(function(en){
+    if(en[0].isIntersecting){ io.disconnect(); _lazyDone[key] = 1; fn(); }
+  }, { rootMargin: '700px' });
+  io.observe(elm); elm._io = io;
+}
+
 function renderAll(){
-  renderChips(); renderHero(); renderContinue(); renderRecos(); renderExplore();
-  renderRank(); renderGrids(); renderRankFull(); renderProfile();
+  /* เหนือจอ: render ทันที */
+  renderChips(); renderHero(); renderContinue(); renderRecos(); renderRank();
+  /* ใต้จอ: render เมื่อใกล้เลื่อนถึง
+     บทความรอ grid เรนเดอร์ก่อน (ไม่งั้นหน้าเตี้ย → observer ยิงทั้งที่ยังไม่เลื่อน) */
+  lazyRender('grids', 'gridNew', function(){
+    renderGrids();
+    requestAnimationFrame(function(){
+      var secArt = document.getElementById('sec-articles');
+      if(secArt) secArt.style.display = ST.articles.length ? '' : 'none';
+      lazyRender('articles', 'homeArticles', renderArticles);
+    });
+  });
+  lazyRender('explore', 'exploreRows', renderExplore);
+  lazyRender('chart', 'rankFull', renderRankFull);
+  renderProfile();
   var db = document.getElementById('demo-banner');
   if(db) db.style.display = ST.demo ? 'flex' : 'none';
 }
@@ -84,7 +110,8 @@ function renderChips(){
     var chip = el('<div class="chip' + ((i === 0 && !activeCat) || c === activeCat ? ' on' : '') + '">' + esc(c) + '</div>');
     chip.addEventListener('click', function(){
       activeCat = (c === 'ทั้งหมด') ? '' : c;
-      renderChips(); renderHero(); renderRank(); renderGrids();
+      renderChips(); renderHero(); renderRank();
+      if(_lazyDone.grids) renderGrids();
     });
     box.appendChild(chip);
   });
@@ -238,6 +265,70 @@ function renderRankFull(){
       (m.rating ? ' · ★ ' + m.rating.toFixed(1) : '') + '</div></div>' +
       (i < 3 ? '<div class="rl-fire">🔥</div>' : '') + '</div>'));
   });
+}
+
+/* ── บทความท้ายหน้าแรก (SEO content) ── */
+function renderArticles(){
+  var sec = document.getElementById('sec-articles'), box = document.getElementById('homeArticles');
+  if(!box) return;
+  if(!ST.articles.length){ if(sec) sec.style.display = 'none'; return; }
+  if(sec) sec.style.display = '';
+  box.innerHTML = '';
+  ST.articles.slice(0, 6).forEach(function(a){
+    var cov = a.cover
+      ? '<img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="' + esc(a.cover) + '" alt="' + esc(a.title) + '" onerror="this.remove()">'
+      : '<div class="art-ph" style="' + art('a_' + a.slug, 4) + '"></div>';
+    var card = el('<a class="art-card" href="?a=' + encodeURIComponent(a.slug) + '">' +
+      '<div class="art-cov">' + cov + '</div>' +
+      '<div class="art-b"><h3>' + esc(a.title) + '</h3>' +
+      (a.excerpt ? '<p>' + esc(a.excerpt) + '</p>' : '') +
+      '<span class="art-more">อ่านต่อ ›</span></div></a>');
+    card.addEventListener('click', function(ev){ ev.preventDefault(); openArticle(a.slug); });
+    box.appendChild(card);
+  });
+}
+
+/* หน้าอ่านบทความ (เต็มจอ + SEO meta/JSON-LD) */
+function openArticle(slug){
+  var v = document.getElementById('artView');
+  document.getElementById('artBody').innerHTML = '<div class="cmt-empty"><span class="spin"></span></div>';
+  if(!v.classList.contains('on')) navPush({ t: 'art' });
+  v.classList.add('on');
+  loadArticleBody(slug).then(function(a){
+    if(!a || !v.classList.contains('on')){ if(!a) document.getElementById('artBody').innerHTML = '<div class="cmt-empty">ไม่พบบทความ</div>'; return; }
+    /* SEO */
+    document.title = a.title + ' | CineMax';
+    var d = document.getElementById('mDesc');
+    if(d) d.setAttribute('content', (a.excerpt || a.body || '').slice(0, 155));
+    var ld = document.getElementById('ldArt');
+    if(!ld){ ld = document.createElement('script'); ld.type = 'application/ld+json'; ld.id = 'ldArt'; document.head.appendChild(ld); }
+    ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Article',
+      headline: a.title, description: a.excerpt || '', image: a.cover || undefined,
+      datePublished: a.created_at, inLanguage: 'th' });
+    /* เนื้อหา: บรรทัด ## = หัวข้อ, ย่อหน้าเว้นบรรทัด */
+    var bodyHtml = String(a.body || '').split(/\n{2,}/).map(function(pra){
+      pra = pra.trim(); if(!pra) return '';
+      if(pra.indexOf('## ') === 0) return '<h2>' + esc(pra.slice(3)) + '</h2>';
+      return '<p>' + esc(pra).replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+    var tags = (a.tags || '').split(',').map(function(t){ return t.trim(); }).filter(Boolean);
+    document.getElementById('artBody').innerHTML =
+      (a.cover ? '<img class="art-hero" src="' + esc(a.cover) + '" alt="' + esc(a.title) + '" referrerpolicy="no-referrer" onerror="this.remove()">' : '') +
+      '<h1>' + esc(a.title) + '</h1>' +
+      '<div class="art-date">' + new Date(a.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) + '</div>' +
+      bodyHtml +
+      (tags.length ? '<div class="pl-tags" style="margin-top:18px">' + tags.map(function(t){ return '<span>#' + esc(t) + '</span>'; }).join('') + '</div>' : '');
+    document.getElementById('artView').scrollTop = 0;
+  });
+}
+function closeArticle(fromPop){
+  var v = document.getElementById('artView');
+  if(!v.classList.contains('on')) return;
+  var top = navTop();
+  if(!fromPop && top && top.t === 'art'){ history.back(); return; }
+  v.classList.remove('on');
+  applySiteSEO();
+  var ld = document.getElementById('ldArt'); if(ld) ld.remove();
 }
 
 /* ── หน้าสำรวจ: แถวโปสเตอร์ตามแนว (Netflix-style) ── */

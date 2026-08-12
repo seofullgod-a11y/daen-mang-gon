@@ -76,5 +76,37 @@ grant select on public.stats to anon, authenticated;
 grant select, insert on public.comments to anon, authenticated;
 grant usage, select on all sequences in schema public to anon, authenticated;
 
+-- ── 4) บทความ (SEO) ─────────────────────────────────────
+create table if not exists public.articles (
+  slug       text primary key,
+  title      text not null,
+  cover      text,
+  excerpt    text,
+  body       text not null default '',
+  tags       text,
+  status     text not null default 'published',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+alter table public.articles enable row level security;
+drop policy if exists "articles read" on public.articles;
+create policy "articles read" on public.articles
+  for select using (status = 'published');
+-- เขียน/แก้/ลบ ผ่านหลังบ้าน (service_role) เท่านั้น
+
+-- ── 5) ตั้งค่าเว็บ + SEO (key/value) ────────────────────
+create table if not exists public.settings (
+  key   text primary key,
+  value text
+);
+alter table public.settings enable row level security;
+drop policy if exists "settings read" on public.settings;
+create policy "settings read" on public.settings
+  for select using (true);
+-- เขียนผ่านหลังบ้าน (service_role) เท่านั้น
+
+grant select on public.articles to anon, authenticated;
+grant select on public.settings to anon, authenticated;
+
 -- แจ้ง PostgREST ให้รีโหลด schema ทันที (ไม่ต้องรอ)
 notify pgrst, 'reload schema';

@@ -123,7 +123,7 @@ function shareCard(m){
   ready.then(function(){ return makeShareCard(m); }).then(function(canvas){
     canvas.toBlob(function(blob){
       if(!blob){ toast('สร้างภาพไม่สำเร็จ'); return; }
-      var url = location.href.split('#')[0] + '#' + encodeURIComponent(m.id);
+      var url = location.origin + location.pathname + '?m=' + encodeURIComponent(m.id);
       var file;
       try{ file = new File([blob], 'cinemax-share.png', { type: 'image/png' }); }catch(e){}
       if(file && navigator.canShare && navigator.canShare({ files: [file] })){

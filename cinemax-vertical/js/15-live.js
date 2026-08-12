@@ -4,9 +4,23 @@
 
 var _sbRT = null, _liveCh = null, _liveMid = null, _lastReact = 0;
 
+var _rtLoading = false;
 function rtClient(){
   if(_sbRT) return _sbRT;
-  if(ST.demo || !window.supabase || !window.supabase.createClient) return null;
+  if(ST.demo) return null;
+  if(!window.supabase || !window.supabase.createClient){
+    if(!_rtLoading){
+      _rtLoading = true;
+      loadScript(SUPA_CDN).then(function(){
+        _rtLoading = false;
+        /* โหลดเสร็จ → ถ้ายังเปิดเรื่องอยู่ ให้เข้าห้อง live ย้อนหลัง */
+        if(CUR && document.getElementById('player').classList.contains('on')){
+          var mid = _liveMid; _liveMid = null; liveJoin(mid || CUR.id);
+        }
+      }).catch(function(){ _rtLoading = false; });
+    }
+    return null;
+  }
   try{
     _sbRT = window.supabase.createClient(SB_URL, SB_KEY, {
       realtime: { params: { eventsPerSecond: 5 } }

@@ -12,10 +12,16 @@
   /* skeleton ระหว่างโหลด */
   renderSkeletons();
 
-  loadMovies().then(function(){ return loadStats(); }).then(function(){
+  Promise.all([loadMovies().then(function(){ return loadStats(); }), loadArticles(), loadSettings()]).then(function(){
     renderAll();
 
-    /* เปิดจากลิงก์แชร์ #movieId หรือ #party=CODE */
+    /* เปิดจากลิงก์ ?m=id (หนัง) / ?a=slug (บทความ) — URL แบบนี้ Google เก็บเข้า index ได้ */
+    var qs = new URLSearchParams(location.search);
+    if(qs.get('a')){ setTimeout(function(){ openArticle(qs.get('a')); }, 100); }
+    else if(qs.get('m') && ST.movies.some(function(m){ return m.id === qs.get('m'); })){
+      setTimeout(function(){ openDetail(qs.get('m')); }, 100);
+    }
+    /* เปิดจากลิงก์แชร์ #movieId หรือ #party=CODE (แบบเดิมยังใช้ได้) */
     var h = decodeURIComponent((location.hash || '').slice(1));
     if(h.indexOf('party=') === 0){
       var pc = h.slice(6).toUpperCase();

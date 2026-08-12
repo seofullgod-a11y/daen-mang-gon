@@ -116,7 +116,7 @@ function dtShare(){
   if(!_dtMovie) return;
   if(typeof shareCard === 'function') shareCard(_dtMovie);
   else {
-    var url = location.href.split('#')[0] + '#' + encodeURIComponent(_dtMovie.id);
+    var url = location.origin + location.pathname + '?m=' + encodeURIComponent(_dtMovie.id);
     navigator.clipboard && navigator.clipboard.writeText(url); toast('คัดลอกลิงก์แล้ว');
   }
 }

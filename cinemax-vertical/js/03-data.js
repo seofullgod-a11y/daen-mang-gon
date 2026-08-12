@@ -40,7 +40,8 @@ function normMovie(d, row){
     bg:      d.bg || '',
     status:  d.st || 'active',
     added:   d.ad || ((row && row.updated_at) || '').slice(0,10),
-    coming:  d.cs === 'coming'
+    coming:  d.cs === 'coming',
+    kw:      d.kw || ''                  // คีย์เวิร์ด SEO (ตั้งจากหลังบ้าน)
   };
 }
 function displayTitle(m){ return m.titleTh || m.title || 'ไม่มีชื่อ'; }
@@ -83,6 +84,47 @@ function loadEpisodes(seriesId){
       }).filter(function(e){ return e.video; })
         .sort(function(a,b){ return a.season !== b.season ? a.season - b.season : a.ep - b.ep; });
     });
+}
+
+/* ── บทความ (SEO) + ตั้งค่าเว็บ ── */
+ST.articles = [];
+function loadArticles(){
+  return fetch(SB_URL + '/rest/v1/articles?select=slug,title,cover,excerpt,tags,created_at&status=eq.published&order=created_at.desc&limit=20',
+    { headers: sbHeaders() })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .catch(function(){ return []; })
+    .then(function(rows){ ST.articles = rows || []; return ST.articles; });
+}
+function loadArticleBody(slug){
+  return fetch(SB_URL + '/rest/v1/articles?select=*&slug=eq.' + encodeURIComponent(slug) + '&limit=1',
+    { headers: sbHeaders() })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .catch(function(){ return []; })
+    .then(function(rows){ return rows[0] || null; });
+}
+function loadSettings(){
+  return fetch(SB_URL + '/rest/v1/settings?select=key,value', { headers: sbHeaders() })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .catch(function(){ return []; })
+    .then(function(rows){
+      (rows || []).forEach(function(r){
+        if(r.key === 'site_title' && r.value) SITE.title = r.value;
+        if(r.key === 'site_desc' && r.value) SITE.desc = r.value;
+        if(r.key === 'site_kw' && r.value) SITE.kw = r.value;
+        if(r.key === 'og_image' && r.value) SITE.og = r.value;
+        if(r.key === 'site_url' && r.value) SITE.url = r.value;
+      });
+      applySiteSEO();
+    });
+}
+function applySiteSEO(){
+  document.title = SITE.title;
+  var set = function(id, v){ var n = document.getElementById(id); if(n && v) n.setAttribute('content', v); };
+  set('mDesc', SITE.desc); set('mKw', SITE.kw);
+  set('ogTitle', SITE.title); set('ogDesc', SITE.desc);
+  if(SITE.og) set('ogImg', SITE.og);
+  var cn = document.getElementById('mCanon');
+  if(cn) cn.setAttribute('href', SITE.url || location.origin + location.pathname);
 }
 
 /* ── localStorage: ประวัติ / โปรด / ไลก์ ── */

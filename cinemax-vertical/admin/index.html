@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>CineMax Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0b0b0b;--panel:#151515;--panel2:#1f1f1f;--red:#e50914;--redD:#8f070e;--rose:#ff4d55;
+  --w:#fff;--g1:#ececec;--g2:#a8a8a8;--g3:#6a6a6a;--line:rgba(255,255,255,.08);--ok:#22c55e}
+body{font-family:'Noto Sans Thai','Kanit',sans-serif;background:var(--bg);color:var(--w);min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;color:var(--w);font-size:.88rem;outline:none;width:100%}
+input:focus,textarea:focus,select:focus{border-color:rgba(229,9,20,.5)}
+textarea{resize:vertical;min-height:90px}
+label{display:block;font-size:.72rem;color:var(--g2);margin:12px 0 5px;font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.85rem;padding:10px 18px;border-radius:11px;
+  background:linear-gradient(120deg,var(--red),var(--redD));color:#fff}
+.btn.gh{background:var(--panel2);border:1px solid var(--line);font-weight:600}
+.btn.dn{background:#7a1216}
+.btn:disabled{opacity:.5}
+h1{font-family:'Kanit';font-size:1.3rem}
+h2{font-family:'Kanit';font-size:1.05rem;margin-bottom:12px}
+.muted{color:var(--g3);font-size:.75rem}
+/* login */
+#login{max-width:460px;margin:10vh auto;padding:28px;background:var(--panel);border:1px solid var(--line);border-radius:20px}
+#login .lg{font-family:'Kanit';font-weight:800;font-size:1.6rem;margin-bottom:4px}
+#login .lg em{font-style:normal;color:var(--red)}
+/* shell */
+#shell{display:none;min-height:100vh}
+#side{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--panel);border-right:1px solid var(--line);
+  padding:20px 12px;display:flex;flex-direction:column;gap:4px}
+#side .lg{font-family:'Kanit';font-weight:800;font-size:1.2rem;padding:0 10px 16px}
+#side .lg em{font-style:normal;color:var(--red)}
+#side button{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:11px;font-size:.88rem;
+  font-weight:600;color:var(--g2);text-align:left;width:100%}
+#side button.on{background:rgba(229,9,20,.14);color:#fff}
+#side .sp{flex:1}
+#main{margin-left:220px;padding:26px 28px 60px;max-width:1080px}
+.pane{display:none}.pane.on{display:block}
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.bar h1{flex:1}
+/* cards/table */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stat b{display:block;font-family:'Kanit';font-size:1.5rem;color:var(--rose)}
+.stat span{font-size:.72rem;color:var(--g2)}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem}
+.tbl th{text-align:left;font-size:.68rem;color:var(--g3);padding:8px 10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.po{width:36px;height:52px;object-fit:cover;border-radius:6px;background:var(--panel2)}
+.tag{display:inline-block;font-size:.64rem;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--panel2)}
+.tag.ok{color:var(--ok)}.tag.off{color:var(--g3)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 14px}
+.tbl .act{color:var(--rose);font-weight:700;font-size:.78rem;padding:4px 6px}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#191919;border:1px solid var(--line);
+  padding:11px 20px;border-radius:22px;font-size:.83rem;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
+#toast.on{opacity:1}
+@media(max-width:860px){
+  #side{width:100%;height:auto;bottom:auto;position:sticky;flex-direction:row;overflow-x:auto;padding:10px}
+  #side .lg{display:none}#side .sp{display:none}
+  #side button{white-space:nowrap;width:auto}
+  #main{margin-left:0;padding:18px 14px 60px}
+  .row2,.row3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="lg">Cine<em>Max</em> Admin</div>
+  <p class="muted">หลังบ้านจัดการเว็บ — สำหรับเจ้าของเท่านั้น</p>
+  <label>Service Role Key (จาก Supabase → Settings → API)</label>
+  <input type="password" id="skInput" placeholder="eyJhbGciOi...">
+  <p class="muted" style="margin-top:8px">คีย์ถูกเก็บไว้เฉพาะแท็บนี้ (sessionStorage) ปิดแท็บแล้วหาย ไม่ถูกฝังในโค้ดเว็บ</p>
+  <div style="margin-top:16px"><button class="btn" id="loginBtn" onclick="login()">เข้าสู่ระบบ</button></div>
+  <div class="muted" id="loginErr" style="margin-top:10px;color:var(--rose)"></div>
+</div>
+
+<!-- SHELL -->
+<div id="shell">
+  <div id="side">
+    <div class="lg">Cine<em>Max</em></div>
+    <button data-p="dash" class="on" onclick="pane('dash')">📊 แดชบอร์ด</button>
+    <button data-p="movies" onclick="pane('movies')">🎬 หนัง/ซีรีส์</button>
+    <button data-p="eps" onclick="pane('eps')">📺 ตอนซีรีส์</button>
+    <button data-p="arts" onclick="pane('arts')">📖 บทความ</button>
+    <button data-p="cmts" onclick="pane('cmts')">💬 คอมเมนต์</button>
+    <button data-p="seo" onclick="pane('seo')">🔍 SEO / ตั้งค่า</button>
+    <div class="sp"></div>
+    <button onclick="logout()">🚪 ออกจากระบบ</button>
+  </div>
+  <div id="main">
+
+    <!-- DASH -->
+    <div class="pane on" id="p-dash">
+      <div class="bar"><h1>แดชบอร์ด</h1><button class="btn gh" onclick="loadDash()">รีเฟรช</button></div>
+      <div class="stats" id="dashStats"></div>
+      <div class="card"><h2>🔥 Top 10 ตามยอดวิวจริง</h2><table class="tbl" id="dashTop"></table></div>
+    </div>
+
+    <!-- MOVIES -->
+    <div class="pane" id="p-movies">
+      <div class="bar"><h1>หนัง/ซีรีส์</h1>
+        <input id="mvSearch" placeholder="ค้นหา..." style="max-width:220px" oninput="renderMovies()">
+        <button class="btn" onclick="editMovie(null)">+ เพิ่มเรื่องใหม่</button></div>
+      <div class="card" id="mvForm" style="display:none"></div>
+      <div class="card"><table class="tbl" id="mvTable"></table></div>
+    </div>
+
+    <!-- EPISODES -->
+    <div class="pane" id="p-eps">
+      <div class="bar"><h1>ตอนซีรีส์</h1>
+        <select id="epSeries" style="max-width:280px" onchange="loadEps()"></select></div>
+      <div class="card" id="epForm" style="display:none"></div>
+      <div class="card">
+        <div class="bar" style="margin-bottom:8px"><h2 style="margin:0;flex:1">รายการตอน</h2>
+          <button class="btn" onclick="editEp(null)">+ เพิ่มตอน</button></div>
+        <table class="tbl" id="epTable"></table></div>
+    </div>
+
+    <!-- ARTICLES -->
+    <div class="pane" id="p-arts">
+      <div class="bar"><h1>บทความ (SEO)</h1><button class="btn" onclick="editArt(null)">+ เขียนบทความ</button></div>
+      <div class="card" id="artForm" style="display:none"></div>
+      <div class="card"><table class="tbl" id="artTable"></table></div>
+    </div>
+
+    <!-- COMMENTS -->
+    <div class="pane" id="p-cmts">
+      <div class="bar"><h1>คอมเมนต์ล่าสุด</h1><button class="btn gh" onclick="loadCmts()">รีเฟรช</button></div>
+      <div class="card"><table class="tbl" id="cmtTable"></table></div>
+    </div>
+
+    <!-- SEO -->
+    <div class="pane" id="p-seo">
+      <div class="bar"><h1>SEO / ตั้งค่าเว็บ</h1></div>
+      <div class="card">
+        <h2>Meta หลักของเว็บ (มีผลทั้งเว็บทันที)</h2>
+        <label>ชื่อเว็บ (Title)</label><input id="sTitle" placeholder="CineMax — ดูซีรีส์สั้นแนวตั้ง อัปเดตทุกวัน">
+        <label>คำอธิบาย (Description ≤160 ตัวอักษร)</label><textarea id="sDesc" style="min-height:60px"></textarea>
+        <label>คีย์เวิร์ด (คั่นด้วย , )</label><input id="sKw" placeholder="ซีรีส์สั้น, ซีรีส์แนวตั้ง, ...">
+        <label>ภาพ OG (ลิงก์รูปตอนแชร์ลงโซเชียล 1200×630)</label><input id="sOg" placeholder="https://...">
+        <label>URL เว็บ (สำหรับ canonical + sitemap)</label><input id="sUrl" placeholder="https://romazeed1.info">
+        <div style="margin-top:16px"><button class="btn" onclick="saveSettings()">บันทึกการตั้งค่า</button></div>
+      </div>
+      <div class="card">
+        <h2>Sitemap</h2>
+        <p class="muted">สร้าง sitemap.xml จากหนัง+บทความทั้งหมด แล้วนำไฟล์ไปวางที่ root ของ repo (คู่กับ index.html) จากนั้น submit ใน Google Search Console</p>
+        <div style="margin-top:12px"><button class="btn gh" onclick="genSitemap()">⬇ สร้างและดาวน์โหลด sitemap.xml</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+var SB_URL = 'https://pugdpjixgwzpursmveht.supabase.co';
+var SK = sessionStorage.getItem('cx_admin_key') || '';
+var MV = [], EPS = [], ARTS = [], SETT = {};
+
+function toast(t){ var n=document.getElementById('toast'); n.textContent=t; n.classList.add('on');
+  clearTimeout(toast._t); toast._t=setTimeout(function(){ n.classList.remove('on'); },2400); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function H(json){ var h={ apikey:SK, Authorization:'Bearer '+SK }; if(json) h['Content-Type']='application/json'; return h; }
+function api(path, opt){
+  opt = opt || {};
+  return fetch(SB_URL + '/rest/v1/' + path, {
+    method: opt.method || 'GET',
+    headers: Object.assign(H(!!opt.body), opt.headers || {}),
+    body: opt.body ? JSON.stringify(opt.body) : undefined
+  }).then(function(r){
+    if(!r.ok) return r.text().then(function(t){ throw new Error(r.status + ': ' + t.slice(0,200)); });
+    return r.status === 204 ? null : r.json().catch(function(){ return null; });
+  });
+}
+
+/* ── AUTH ── */
+function login(){
+  var k = document.getElementById('skInput').value.trim();
+  if(!k){ document.getElementById('loginErr').textContent = 'กรอกคีย์ก่อนครับ'; return; }
+  SK = k;
+  document.getElementById('loginBtn').disabled = true;
+  api('movies?select=id&limit=1').then(function(){
+    sessionStorage.setItem('cx_admin_key', k);
+    boot();
+  }).catch(function(e){
+    document.getElementById('loginErr').textContent = 'คีย์ไม่ถูกต้องหรือเชื่อมต่อไม่ได้ (' + e.message.slice(0,80) + ')';
+    SK = '';
+  }).then(function(){ document.getElementById('loginBtn').disabled = false; });
+}
+function logout(){ sessionStorage.removeItem('cx_admin_key'); location.reload(); }
+
+function boot(){
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('shell').style.display = 'block';
+  loadMovies().then(function(){ loadDash(); fillSeriesSelect(); });
+  loadArts(); loadCmts(); loadSett();
+}
+if(SK){ api('movies?select=id&limit=1').then(boot).catch(function(){ sessionStorage.removeItem('cx_admin_key'); SK=''; }); }
+
+function pane(p){
+  document.querySelectorAll('.pane').forEach(function(n){ n.classList.remove('on'); });
+  document.getElementById('p-' + p).classList.add('on');
+  document.querySelectorAll('#side [data-p]').forEach(function(b){ b.classList.toggle('on', b.dataset.p === p); });
+}
+
+/* ── MOVIES ── */
+function loadMovies(){
+  return api('movies?select=id,data,updated_at&order=updated_at.desc').then(function(rows){
+    MV = rows || []; renderMovies();
+  }).catch(function(e){ toast('โหลดหนังไม่สำเร็จ: ' + e.message); });
+}
+function renderMovies(){
+  var q = (document.getElementById('mvSearch').value || '').toLowerCase();
+  var t = document.getElementById('mvTable');
+  var rows = MV.filter(function(r){
+    var d = r.data || {};
+    return !q || ((d.t || '') + (d.tht || '') + (d.gn || '')).toLowerCase().indexOf(q) >= 0;
+  });
+  t.innerHTML = '<tr><th></th><th>ชื่อเรื่อง</th><th>ประเภท</th><th>แนว</th><th>สถานะ</th><th></th></tr>' +
+    rows.slice(0, 200).map(function(r){
+      var d = r.data || {};
+      return '<tr><td>' + (d.po ? '<img class="po" loading="lazy" src="' + esc(d.po) + '">' : '<div class="po"></div>') + '</td>' +
+        '<td><b>' + esc(d.t || r.id) + '</b><div class="muted">' + esc(r.id) + '</div></td>' +
+        '<td>' + (d.tp === 'series' ? 'ซีรีส์' : 'หนัง') + '</td>' +
+        '<td>' + esc(d.gn || '-') + '</td>' +
+        '<td><span class="tag ' + (d.st === 'active' || !d.st ? 'ok">เผยแพร่' : 'off">ซ่อน') + '</span></td>' +
+        '<td><button class="act" onclick="editMovie(\'' + esc(r.id) + '\')">แก้ไข</button>' +
+        '<button class="act" onclick="delMovie(\'' + esc(r.id) + '\')">ลบ</button></td></tr>';
+    }).join('');
+}
+function editMovie(id){
+  var r = id ? MV.find(function(x){ return x.id === id; }) : null;
+  var d = (r && r.data) || {};
+  var f = document.getElementById('mvForm');
+  f.style.display = 'block';
+  f.innerHTML = '<h2>' + (id ? '✏️ แก้ไข: ' + esc(d.t || id) : '➕ เพิ่มเรื่องใหม่') + '</h2>' +
+    '<div class="row2"><div><label>ชื่อเรื่อง *</label><input id="f_t" value="' + esc(d.t) + '"></div>' +
+    '<div><label>ชื่อไทย (ถ้ามี)</label><input id="f_tht" value="' + esc(d.tht) + '"></div></div>' +
+    '<div class="row3"><div><label>ประเภท</label><select id="f_tp"><option value="movie"' + (d.tp !== 'series' ? ' selected' : '') + '>หนัง</option><option value="series"' + (d.tp === 'series' ? ' selected' : '') + '>ซีรีส์</option></select></div>' +
+    '<div><label>ปี</label><input id="f_yr" value="' + esc(d.yr) + '"></div>' +
+    '<div><label>คะแนน (0-10)</label><input id="f_rt" value="' + esc(d.rt) + '"></div></div>' +
+    '<label>แนว (คั่น ·)</label><input id="f_gn" value="' + esc(d.gn) + '" placeholder="ดราม่า·โรแมนซ์">' +
+    '<label>เรื่องย่อ</label><textarea id="f_ds">' + esc(d.ds) + '</textarea>' +
+    '<div class="row2"><div><label>โปสเตอร์ (แนวตั้ง)</label><input id="f_po" value="' + esc(d.po) + '"></div>' +
+    '<div><label>ภาพพื้นหลัง (แนวนอน)</label><input id="f_bg" value="' + esc(d.bg) + '"></div></div>' +
+    '<label>ลิงก์วิดีโอหลัก (HLS .m3u8 / MP4 / Cloudflare / YouTube)</label><input id="f_mv" value="' + esc(d.mv) + '">' +
+    '<label>ลิงก์ตัวอย่าง (trailer)</label><input id="f_tr" value="' + esc(d.tr) + '">' +
+    '<div class="row2"><div><label>ผู้กำกับ</label><input id="f_di" value="' + esc(d.di) + '"></div>' +
+    '<div><label>นักแสดง</label><input id="f_ca" value="' + esc(d.ca) + '"></div></div>' +
+    '<label>🔍 คีย์เวิร์ด SEO (คั่นด้วย , — แสดงเป็น #tag ในหน้าเล่น)</label><input id="f_kw" value="' + esc(d.kw) + '" placeholder="ซีรีส์จีน, CEO, ตบจูบ">' +
+    '<label>สถานะ</label><select id="f_st"><option value="active"' + (d.st !== 'hidden' ? ' selected' : '') + '>เผยแพร่</option><option value="hidden"' + (d.st === 'hidden' ? ' selected' : '') + '>ซ่อน</option></select>' +
+    '<div style="margin-top:16px;display:flex;gap:10px">' +
+    '<button class="btn" onclick="saveMovie(' + (id ? '\'' + esc(id) + '\'' : 'null') + ')">💾 บันทึก</button>' +
+    '<button class="btn gh" onclick="document.getElementById(\'mvForm\').style.display=\'none\'">ยกเลิก</button></div>';
+  f.scrollIntoView({ behavior: 'smooth' });
+}
+function fv(id){ return document.getElementById(id).value.trim(); }
+function saveMovie(id){
+  var r = id ? MV.find(function(x){ return x.id === id; }) : null;
+  var d = Object.assign({}, (r && r.data) || {});
+  d.t = fv('f_t'); if(!d.t){ toast('ใส่ชื่อเรื่องก่อนครับ'); return; }
+  d.tht = fv('f_tht'); d.tp = fv('f_tp'); d.yr = parseInt(fv('f_yr')) || undefined;
+  d.rt = parseFloat(fv('f_rt')) || undefined; d.gn = fv('f_gn'); d.ds = fv('f_ds');
+  d.po = fv('f_po'); d.bg = fv('f_bg'); d.mv = fv('f_mv') || undefined; d.tr = fv('f_tr') || undefined;
+  d.di = fv('f_di'); d.ca = fv('f_ca'); d.kw = fv('f_kw'); d.st = fv('f_st');
+  if(!id){ d.id = 'm_' + Date.now(); d.ad = new Date().toISOString().slice(0, 10); }
+  else d.id = id;
+  api('movies?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+    body: [{ id: d.id, data: d, updated_at: new Date().toISOString() }] })
+    .then(function(){ toast('บันทึก "' + d.t + '" แล้ว ✓'); document.getElementById('mvForm').style.display = 'none'; loadMovies(); })
+    .catch(function(e){ toast('บันทึกไม่สำเร็จ: ' + e.message); });
+}
+function delMovie(id){
+  if(!confirm('ลบเรื่องนี้ถาวร?')) return;
+  api('movies?id=eq.' + encodeURIComponent(id), { method: 'DELETE' })
+    .then(function(){ toast('ลบแล้ว'); loadMovies(); })
+    .catch(function(e){ toast('ลบไม่สำเร็จ: ' + e.message); });
+}
+
+/* ── EPISODES ── */
+function fillSeriesSelect(){
+  var sel = document.getElementById('epSeries');
+  var series = MV.filter(function(r){ return (r.data || {}).tp === 'series'; });
+  sel.innerHTML = '<option value="">— เลือกซีรีส์ —</option>' +
+    series.map(function(r){ return '<option value="' + esc(r.id) + '">' + esc((r.data || {}).t || r.id) + '</option>'; }).join('');
+}
+function loadEps(){
+  var sid = document.getElementById('epSeries').value;
+  document.getElementById('epForm').style.display = 'none';
+  if(!sid){ document.getElementById('epTable').innerHTML = ''; return; }
+  api('episodes?select=*&series_id=eq.' + encodeURIComponent(sid)).then(function(rows){
+    EPS = (rows || []).sort(function(a, b){
+      var sa = a.season || a.season_number || 1, sb = b.season || b.season_number || 1;
+      var ea = a.episode || a.episode_number || 1, eb = b.episode || b.episode_number || 1;
+      return sa !== sb ? sa - sb : ea - eb;
+    });
+    var t = document.getElementById('epTable');
+    t.innerHTML = '<tr><th>S/EP</th><th>ชื่อตอน</th><th>วิดีโอ</th><th></th></tr>' +
+      EPS.map(function(e){
+        return '<tr><td><b>S' + (e.season || e.season_number || 1) + ' EP' + (e.episode || e.episode_number || 1) + '</b></td>' +
+          '<td>' + esc(e.title || '-') + '</td>' +
+          '<td class="muted" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(e.video_url || '-') + '</td>' +
+          '<td><button class="act" onclick="editEp(' + e.id + ')">แก้ไข</button>' +
+          '<button class="act" onclick="delEp(' + e.id + ')">ลบ</button></td></tr>';
+      }).join('');
+  }).catch(function(e){ toast('โหลดตอนไม่สำเร็จ: ' + e.message); });
+}
+function editEp(id){
+  var sid = document.getElementById('epSeries').value;
+  if(!sid){ toast('เลือกซีรีส์ก่อนครับ'); return; }
+  var e = id ? EPS.find(function(x){ return x.id === id; }) : {};
+  e = e || {};
+  var f = document.getElementById('epForm');
+  f.style.display = 'block';
+  f.innerHTML = '<h2>' + (id ? '✏️ แก้ไขตอน' : '➕ เพิ่มตอน') + '</h2>' +
+    '<div class="row3"><div><label>Season</label><input id="e_s" value="' + (e.season || e.season_number || 1) + '"></div>' +
+    '<div><label>Episode *</label><input id="e_e" value="' + (e.episode || e.episode_number || '') + '"></div>' +
+    '<div><label>ความยาว (วินาที)</label><input id="e_d" value="' + (e.duration_sec || '') + '"></div></div>' +
+    '<label>ชื่อตอน</label><input id="e_t" value="' + esc(e.title) + '">' +
+    '<label>ลิงก์วิดีโอ * (แนะนำ HLS .m3u8)</label><input id="e_v" value="' + esc(e.video_url) + '">' +
+    '<label>ภาพพรีวิวตอน (thumbnail)</label><input id="e_th" value="' + esc(e.thumbnail) + '">' +
+    '<div style="margin-top:16px;display:flex;gap:10px">' +
+    '<button class="btn" onclick="saveEp(' + (id || 'null') + ')">💾 บันทึก</button>' +
+    '<button class="btn gh" onclick="document.getElementById(\'epForm\').style.display=\'none\'">ยกเลิก</button></div>';
+}
+function saveEp(id){
+  var sid = document.getElementById('epSeries').value;
+  var body = { series_id: sid, season: parseInt(fv('e_s')) || 1, episode: parseInt(fv('e_e')),
+    title: fv('e_t'), video_url: fv('e_v'), thumbnail: fv('e_th'),
+    duration_sec: parseInt(fv('e_d')) || null };
+  if(!body.episode || !body.video_url){ toast('ใส่เลขตอนและลิงก์วิดีโอก่อนครับ'); return; }
+  var req = id
+    ? api('episodes?id=eq.' + id, { method: 'PATCH', body: body })
+    : api('episodes', { method: 'POST', body: [body] });
+  req.then(function(){ toast('บันทึกตอนแล้ว ✓'); document.getElementById('epForm').style.display = 'none'; loadEps(); })
+    .catch(function(e){ toast('บันทึกไม่สำเร็จ: ' + e.message); });
+}
+function delEp(id){
+  if(!confirm('ลบตอนนี้?')) return;
+  api('episodes?id=eq.' + id, { method: 'DELETE' })
+    .then(function(){ toast('ลบแล้ว'); loadEps(); })
+    .catch(function(e){ toast('ลบไม่สำเร็จ: ' + e.message); });
+}
+
+/* ── ARTICLES ── */
+function loadArts(){
+  api('articles?select=*&order=created_at.desc').then(function(rows){
+    ARTS = rows || [];
+    var t = document.getElementById('artTable');
+    t.innerHTML = '<tr><th>บทความ</th><th>สถานะ</th><th>วันที่</th><th></th></tr>' +
+      ARTS.map(function(a){
+        return '<tr><td><b>' + esc(a.title) + '</b><div class="muted">?a=' + esc(a.slug) + '</div></td>' +
+          '<td><span class="tag ' + (a.status === 'published' ? 'ok">เผยแพร่' : 'off">ฉบับร่าง') + '</span></td>' +
+          '<td class="muted">' + new Date(a.created_at).toLocaleDateString('th-TH') + '</td>' +
+          '<td><button class="act" onclick="editArt(\'' + esc(a.slug) + '\')">แก้ไข</button>' +
+          '<button class="act" onclick="delArt(\'' + esc(a.slug) + '\')">ลบ</button></td></tr>';
+      }).join('');
+  }).catch(function(){ document.getElementById('artTable').innerHTML =
+    '<tr><td class="muted">ยังไม่มีตาราง articles — รัน sql/setup.sql เวอร์ชันล่าสุดใน Supabase ก่อน</td></tr>'; });
+}
+function editArt(slug){
+  var a = slug ? ARTS.find(function(x){ return x.slug === slug; }) : {};
+  a = a || {};
+  var f = document.getElementById('artForm');
+  f.style.display = 'block';
+  f.innerHTML = '<h2>' + (slug ? '✏️ แก้ไขบทความ' : '➕ เขียนบทความใหม่') + '</h2>' +
+    '<label>หัวข้อ * (สำคัญต่อ SEO — ใส่คีย์เวิร์ดในหัวข้อ)</label><input id="a_t" value="' + esc(a.title) + '">' +
+    '<label>Slug (URL: ?a=slug — ภาษาอังกฤษ/ตัวเลข/ขีด)</label><input id="a_s" value="' + esc(a.slug) + '"' + (slug ? ' disabled' : '') + ' placeholder="top-10-series-2026">' +
+    '<label>ภาพหน้าปก (ลิงก์)</label><input id="a_c" value="' + esc(a.cover) + '">' +
+    '<label>คำโปรย (excerpt — โชว์ในการ์ด + meta description)</label><textarea id="a_x" style="min-height:56px">' + esc(a.excerpt) + '</textarea>' +
+    '<label>เนื้อหา (ขึ้นหัวข้อใหม่ด้วย "## " · เว้นบรรทัดว่าง = ย่อหน้าใหม่)</label><textarea id="a_b" style="min-height:260px">' + esc(a.body) + '</textarea>' +
+    '<label>แท็ก (คั่นด้วย , )</label><input id="a_g" value="' + esc(a.tags) + '">' +
+    '<label>สถานะ</label><select id="a_st"><option value="published"' + (a.status !== 'draft' ? ' selected' : '') + '>เผยแพร่</option><option value="draft"' + (a.status === 'draft' ? ' selected' : '') + '>ฉบับร่าง</option></select>' +
+    '<div style="margin-top:16px;display:flex;gap:10px">' +
+    '<button class="btn" onclick="saveArt(' + (slug ? '\'' + esc(slug) + '\'' : 'null') + ')">💾 บันทึก</button>' +
+    '<button class="btn gh" onclick="document.getElementById(\'artForm\').style.display=\'none\'">ยกเลิก</button></div>';
+  f.scrollIntoView({ behavior: 'smooth' });
+}
+function saveArt(slug){
+  var s = slug || fv('a_s').toLowerCase().replace(/[^a-z0-9ก-๙\-]+/g, '-').replace(/^-+|-+$/g, '');
+  var t = fv('a_t');
+  if(!t || !s){ toast('ใส่หัวข้อและ slug ก่อนครับ'); return; }
+  api('articles?on_conflict=slug', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+    body: [{ slug: s, title: t, cover: fv('a_c'), excerpt: fv('a_x'), body: document.getElementById('a_b').value,
+      tags: fv('a_g'), status: fv('a_st'), updated_at: new Date().toISOString() }] })
+    .then(function(){ toast('บันทึกบทความแล้ว ✓'); document.getElementById('artForm').style.display = 'none'; loadArts(); })
+    .catch(function(e){ toast('บันทึกไม่สำเร็จ: ' + e.message); });
+}
+function delArt(slug){
+  if(!confirm('ลบบทความนี้?')) return;
+  api('articles?slug=eq.' + encodeURIComponent(slug), { method: 'DELETE' })
+    .then(function(){ toast('ลบแล้ว'); loadArts(); })
+    .catch(function(e){ toast('ลบไม่สำเร็จ: ' + e.message); });
+}
+
+/* ── COMMENTS ── */
+function loadCmts(){
+  api('comments?select=*&order=created_at.desc&limit=100').then(function(rows){
+    var t = document.getElementById('cmtTable');
+    t.innerHTML = '<tr><th>ผู้เขียน</th><th>ข้อความ</th><th>เรื่อง</th><th>เวลา</th><th></th></tr>' +
+      (rows || []).map(function(c){
+        var mv = MV.find(function(r){ return r.id === c.movie_id; });
+        return '<tr><td><b>' + esc(c.nick) + '</b></td>' +
+          '<td style="max-width:300px">' + esc(c.body) + '</td>' +
+          '<td class="muted">' + esc(mv ? (mv.data || {}).t : c.movie_id) + (c.episode ? ' EP' + c.episode : '') + '</td>' +
+          '<td class="muted">' + new Date(c.created_at).toLocaleString('th-TH') + '</td>' +
+          '<td><button class="act" onclick="delCmt(' + c.id + ')">ลบ</button></td></tr>';
+      }).join('');
+  }).catch(function(){ document.getElementById('cmtTable').innerHTML = '<tr><td class="muted">โหลดไม่สำเร็จ (รัน sql/setup.sql หรือยัง?)</td></tr>'; });
+}
+function delCmt(id){
+  if(!confirm('ลบคอมเมนต์นี้?')) return;
+  api('comments?id=eq.' + id, { method: 'DELETE' })
+    .then(function(){ toast('ลบแล้ว'); loadCmts(); })
+    .catch(function(e){ toast('ลบไม่สำเร็จ: ' + e.message); });
+}
+
+/* ── SEO / SETTINGS ── */
+function loadSett(){
+  api('settings?select=key,value').then(function(rows){
+    SETT = {};
+    (rows || []).forEach(function(r){ SETT[r.key] = r.value; });
+    document.getElementById('sTitle').value = SETT.site_title || '';
+    document.getElementById('sDesc').value = SETT.site_desc || '';
+    document.getElementById('sKw').value = SETT.site_kw || '';
+    document.getElementById('sOg').value = SETT.og_image || '';
+    document.getElementById('sUrl').value = SETT.site_url || '';
+  }).catch(function(){});
+}
+function saveSettings(){
+  var rows = [
+    { key: 'site_title', value: fv('sTitle') },
+    { key: 'site_desc', value: fv('sDesc') },
+    { key: 'site_kw', value: fv('sKw') },
+    { key: 'og_image', value: fv('sOg') },
+    { key: 'site_url', value: fv('sUrl').replace(/\/+$/, '') }
+  ];
+  api('settings?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: rows })
+    .then(function(){ toast('บันทึกการตั้งค่าแล้ว ✓ มีผลทั้งเว็บทันที'); loadSett(); })
+    .catch(function(e){ toast('บันทึกไม่สำเร็จ: ' + e.message + ' (รัน sql/setup.sql ล่าสุดหรือยัง?)'); });
+}
+function genSitemap(){
+  var base = (fv('sUrl') || SETT.site_url || '').replace(/\/+$/, '');
+  if(!base){ toast('กรอก URL เว็บในช่องด้านบนก่อนครับ'); return; }
+  var today = new Date().toISOString().slice(0, 10);
+  var urls = ['  <url><loc>' + base + '/</loc><lastmod>' + today + '</lastmod><priority>1.0</priority></url>'];
+  MV.forEach(function(r){
+    var d = r.data || {};
+    if(d.st === 'hidden') return;
+    urls.push('  <url><loc>' + base + '/?m=' + encodeURIComponent(r.id) + '</loc><lastmod>' +
+      (r.updated_at || today).slice(0, 10) + '</lastmod><priority>0.8</priority></url>');
+  });
+  ARTS.forEach(function(a){
+    if(a.status !== 'published') return;
+    urls.push('  <url><loc>' + base + '/?a=' + encodeURIComponent(a.slug) + '</loc><lastmod>' +
+      (a.updated_at || a.created_at || today).slice(0, 10) + '</lastmod><priority>0.7</priority></url>');
+  });
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    urls.join('\n') + '\n</urlset>\n';
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([xml], { type: 'application/xml' }));
+  a.download = 'sitemap.xml';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('ดาวน์โหลด sitemap.xml แล้ว (' + urls.length + ' URLs) — นำไปวางที่ root ของ repo');
+}
+
+/* ── DASH ── */
+function loadDash(){
+  Promise.all([
+    api('stats?select=movie_id,views,likes').catch(function(){ return []; }),
+    api('comments?select=id&limit=1', { headers: { Prefer: 'count=exact' } }).catch(function(){ return null; }),
+    api('articles?select=slug').catch(function(){ return []; })
+  ]).then(function(res){
+    var stats = res[0] || [], arts = res[2] || [];
+    var views = 0, likes = 0;
+    stats.forEach(function(s){ views += (+s.views || 0); likes += (+s.likes || 0); });
+    document.getElementById('dashStats').innerHTML =
+      '<div class="stat"><b>' + MV.length + '</b><span>หนัง/ซีรีส์ทั้งหมด</span></div>' +
+      '<div class="stat"><b>' + views.toLocaleString() + '</b><span>ยอดวิวรวม</span></div>' +
+      '<div class="stat"><b>' + likes.toLocaleString() + '</b><span>ยอดถูกใจรวม</span></div>' +
+      '<div class="stat"><b>' + arts.length + '</b><span>บทความ</span></div>';
+    var top = stats.slice().sort(function(a, b){ return (b.views || 0) - (a.views || 0); }).slice(0, 10);
+    document.getElementById('dashTop').innerHTML = '<tr><th>#</th><th>เรื่อง</th><th>วิว</th><th>ถูกใจ</th></tr>' +
+      top.map(function(s, i){
+        var mv = MV.find(function(r){ return r.id === s.movie_id; });
+        return '<tr><td><b style="color:var(--rose)">' + (i + 1) + '</b></td>' +
+          '<td>' + esc(mv ? (mv.data || {}).t : s.movie_id) + '</td>' +
+          '<td>' + (+s.views || 0).toLocaleString() + '</td>' +
+          '<td>' + (+s.likes || 0).toLocaleString() + '</td></tr>';
+      }).join('');
+  });
+}
+</script>
+</body>
+</html>
