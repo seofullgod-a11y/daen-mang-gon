@@ -122,7 +122,7 @@ function applySiteSEO(){
   var set = function(id, v){ var n = document.getElementById(id); if(n && v) n.setAttribute('content', v); };
   set('mDesc', SITE.desc); set('mKw', SITE.kw);
   set('ogTitle', SITE.title); set('ogDesc', SITE.desc);
-  if(SITE.og) set('ogImg', SITE.og);
+  set('ogImg', SITE.og || 'icons/icon-512.png');   // ไม่ตั้งค่าเอง → คืนเป็นไอคอนเว็บ
   var cn = document.getElementById('mCanon');
   if(cn) cn.setAttribute('href', SITE.url || location.origin + location.pathname);
 }

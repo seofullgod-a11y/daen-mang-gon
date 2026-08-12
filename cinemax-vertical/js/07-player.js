@@ -386,6 +386,12 @@ function applyWatchSEO(m, p){
   document.title = 'ดู ' + displayTitle(m) + epTxt + ' | CineMax';
   var d = document.getElementById('mDesc');
   if(d && m.desc) d.setAttribute('content', ('ดู ' + displayTitle(m) + epTxt + ' — ' + m.desc).slice(0, 155));
+  /* og + canonical ชี้ไปที่ URL ?m= ของเรื่องนี้ */
+  var ot = document.getElementById('ogTitle'); if(ot) ot.setAttribute('content', document.title);
+  var od = document.getElementById('ogDesc'); if(od && m.desc) od.setAttribute('content', m.desc.slice(0, 155));
+  if(m.poster){ var oi = document.getElementById('ogImg'); if(oi) oi.setAttribute('content', m.poster); }
+  var cn = document.getElementById('mCanon');
+  if(cn) cn.setAttribute('href', (SITE.url || location.origin + location.pathname) + '?m=' + encodeURIComponent(m.id));
   var ld = document.getElementById('ldVideo');
   if(!ld){ ld = document.createElement('script'); ld.type = 'application/ld+json'; ld.id = 'ldVideo'; document.head.appendChild(ld); }
   /* VideoObject = ชนิดที่ Google ใช้ทำ video rich results + พ่วง Movie/TVSeries */
@@ -405,8 +411,7 @@ function applyWatchSEO(m, p){
   ld.textContent = JSON.stringify([vid, work]);
 }
 function restoreSiteSEO(){
-  document.title = SITE.title;
-  var d = document.getElementById('mDesc'); if(d) d.setAttribute('content', SITE.desc);
+  applySiteSEO();   // คืน title/description/og/canonical ของทั้งเว็บ
   var ld = document.getElementById('ldVideo'); if(ld) ld.remove();
 }
 

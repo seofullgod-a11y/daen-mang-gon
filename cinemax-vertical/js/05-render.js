@@ -61,30 +61,49 @@ function retryConnect(){
   });
 }
 
-/* ── Lazy render: ยังไม่เลื่อนถึง = ยังไม่สร้าง DOM (เร็ว + ประหยัด) ── */
+/* ── Lazy render: ยังไม่เลื่อนถึง = ยังไม่สร้าง DOM เลย (เร็ว + ประหยัด) ──
+   ระหว่างรอ แสดง skeleton (.pend) กันหน้าเตี้ย/กันจอกระตุก (CLS)
+   Googlebot เรนเดอร์ด้วย viewport สูงเต็มหน้า → observer ยิงครบ เก็บเนื้อหาได้หมด */
 var _lazyDone = {};
 function lazyRender(key, elId, fn){
-  if(_lazyDone[key]){ fn(); return; }
   var elm = document.getElementById(elId);
-  if(!elm || !('IntersectionObserver' in window)){ _lazyDone[key] = 1; fn(); return; }
+  var sec = elm && elm.closest ? elm.closest('.sec') : null;
+  var run = function(){
+    if(sec) sec.classList.remove('pend');
+    fn();
+  };
+  if(_lazyDone[key]){ run(); return; }
+  if(!elm || !('IntersectionObserver' in window)){ _lazyDone[key] = 1; run(); return; }
+  if(sec && sec.style.display !== 'none') sec.classList.add('pend');
   if(elm._io) elm._io.disconnect();
   var io = new IntersectionObserver(function(en){
-    if(en[0].isIntersecting){ io.disconnect(); _lazyDone[key] = 1; fn(); }
-  }, { rootMargin: '700px' });
+    if(en[0].isIntersecting){ io.disconnect(); _lazyDone[key] = 1; run(); }
+  }, /* ล่าง 0px = ใต้จอไม่เรนเดอร์เด็ดขาดจนกว่าจะโผล่ · บน 100000px = ถ้าเลื่อนข้ามไปแล้วให้เรนเดอร์เสมอ */
+  { rootMargin: '100000px 0px 0px 0px' });
   io.observe(elm); elm._io = io;
 }
 
 function renderAll(){
-  /* เหนือจอ: render ทันที */
-  renderChips(); renderHero(); renderContinue(); renderRecos(); renderRank();
-  /* ใต้จอ: render เมื่อใกล้เลื่อนถึง
-     บทความรอ grid เรนเดอร์ก่อน (ไม่งั้นหน้าเตี้ย → observer ยิงทั้งที่ยังไม่เลื่อน) */
-  lazyRender('grids', 'gridNew', function(){
-    renderGrids();
+  /* เหนือจอเท่านั้นที่ render ทันที */
+  renderChips(); renderHero(); renderContinue(); renderRecos();
+  /* ใต้จอ: ต่อคิวเป็นลูกโซ่ Top10 → ใหม่ล่าสุด → แนะนำ → บทความ
+     (register observer ตัวถัดไปหลังตัวก่อนหน้า render จริง → ตำแหน่งเพจถูกต้อง ไม่ยิงก่อนเวลา) */
+  lazyRender('rank', 'rankRow', function(){
+    renderRank();
     requestAnimationFrame(function(){
-      var secArt = document.getElementById('sec-articles');
-      if(secArt) secArt.style.display = ST.articles.length ? '' : 'none';
-      lazyRender('articles', 'homeArticles', renderArticles);
+      lazyRender('gridNew', 'gridNew', function(){
+        renderGridNew();
+        requestAnimationFrame(function(){
+          lazyRender('gridRec', 'gridRec', function(){
+            renderGridRec();
+            requestAnimationFrame(function(){
+              var secArt = document.getElementById('sec-articles');
+              if(secArt) secArt.style.display = ST.articles.length ? '' : 'none';
+              lazyRender('articles', 'homeArticles', renderArticles);
+            });
+          });
+        });
+      });
     });
   });
   lazyRender('explore', 'exploreRows', renderExplore);
@@ -110,8 +129,9 @@ function renderChips(){
     var chip = el('<div class="chip' + ((i === 0 && !activeCat) || c === activeCat ? ' on' : '') + '">' + esc(c) + '</div>');
     chip.addEventListener('click', function(){
       activeCat = (c === 'ทั้งหมด') ? '' : c;
-      renderChips(); renderHero(); renderRank();
-      if(_lazyDone.grids) renderGrids();
+      renderChips(); renderHero();
+      if(_lazyDone.rank) renderRank();
+      renderGrids();
     });
     box.appendChild(chip);
   });
@@ -132,8 +152,10 @@ function renderHero(){
 
   var bgHtml = list.map(function(m, i){
     var src = m.bg || m.poster;
+    /* ใบแรก = LCP → โหลดด่วนสุด, ใบอื่นค่อยโหลดทีหลัง (ไม่แย่งเน็ตตอนเปิดเว็บ) */
+    var prio = i === 0 ? ' fetchpriority="high" decoding="async"' : ' loading="lazy" decoding="async"';
     return src
-      ? '<img class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" referrerpolicy="no-referrer" src="' + esc(src) + '" alt="" onerror="this.style.visibility=\'hidden\'">'
+      ? '<img class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '"' + prio + ' referrerpolicy="no-referrer" src="' + esc(src) + '" alt="' + esc(displayTitle(m)) + '" onerror="this.style.visibility=\'hidden\'">'
       : '<div class="bb-img' + (i === 0 ? ' on' : '') + '" data-i="' + i + '" style="' + art(m.id,5) + '"></div>';
   }).join('');
 
@@ -142,7 +164,7 @@ function renderHero(){
     '<div class="bb-body" id="bbBody"></div>' +
     '<div class="bb-rail" id="bbRail">' + list.map(function(m, i){
       var inner = m.poster
-        ? '<img referrerpolicy="no-referrer" src="' + esc(m.poster) + '" alt="">'
+        ? '<img loading="lazy" decoding="async" referrerpolicy="no-referrer" src="' + esc(m.poster) + '" alt="">'
         : '<div style="position:absolute;inset:0;' + art(m.id,9) + '"></div>';
       return '<div class="bb-thumb' + (i === 0 ? ' on' : '') + '" data-i="' + i + '">' + inner + '</div>';
     }).join('') + '</div>' +
@@ -232,14 +254,31 @@ function renderRank(){
       '<div class="rank-num">' + (i + 1) + '</div>' +
       '<div class="rank-po">' + posterHtml(m) + '</div></div>'));
   });
+  /* SEO: ItemList ให้ Google เข้าใจว่านี่คือชาร์ต Top 10 พร้อมลิงก์เข้าแต่ละเรื่อง */
+  try{
+    var ld = document.getElementById('ldList');
+    if(!ld){ ld = document.createElement('script'); ld.type = 'application/ld+json'; ld.id = 'ldList'; document.head.appendChild(ld); }
+    var base = SITE.url || (location.origin + location.pathname);
+    ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList',
+      name: 'Top 10 ซีรีส์สั้นยอดนิยมวันนี้',
+      itemListElement: list.map(function(m, i){
+        return { '@type': 'ListItem', position: i + 1, name: displayTitle(m),
+          url: base + '?m=' + encodeURIComponent(m.id) };
+      }) });
+  }catch(e){}
 }
 
-function renderGrids(){
-  var vis = visMovies();
+function renderGridNew(){
   fillGridLimited('gridNew',
-    vis.slice().sort(function(a,b){ return (b.added || '').localeCompare(a.added || ''); }));
+    visMovies().slice().sort(function(a,b){ return (b.added || '').localeCompare(a.added || ''); }));
+}
+function renderGridRec(){
   fillGridLimited('gridRec',
-    vis.slice().sort(function(a,b){ return hashCode(a.id + 'x') - hashCode(b.id + 'x'); }));
+    visMovies().slice().sort(function(a,b){ return hashCode(a.id + 'x') - hashCode(b.id + 'x'); }));
+}
+function renderGrids(){   // re-render เฉพาะกริดที่เคย render แล้ว (เรียกจากปุ่มดูเพิ่ม/เปลี่ยนหมวด)
+  if(_lazyDone.gridNew) renderGridNew();
+  if(_lazyDone.gridRec) renderGridRec();
 }
 function fillGridLimited(id, list){
   var g = document.getElementById(id); g.innerHTML = '';
@@ -300,6 +339,11 @@ function openArticle(slug){
     document.title = a.title + ' | CineMax';
     var d = document.getElementById('mDesc');
     if(d) d.setAttribute('content', (a.excerpt || a.body || '').slice(0, 155));
+    var ot = document.getElementById('ogTitle'); if(ot) ot.setAttribute('content', a.title);
+    var od = document.getElementById('ogDesc'); if(od) od.setAttribute('content', (a.excerpt || '').slice(0, 155));
+    if(a.cover){ var oi = document.getElementById('ogImg'); if(oi) oi.setAttribute('content', a.cover); }
+    var cn = document.getElementById('mCanon');
+    if(cn) cn.setAttribute('href', (SITE.url || location.origin + location.pathname) + '?a=' + encodeURIComponent(slug));
     var ld = document.getElementById('ldArt');
     if(!ld){ ld = document.createElement('script'); ld.type = 'application/ld+json'; ld.id = 'ldArt'; document.head.appendChild(ld); }
     ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Article',

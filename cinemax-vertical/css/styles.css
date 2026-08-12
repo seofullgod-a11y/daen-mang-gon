@@ -520,6 +520,14 @@ svg{display:block}
   background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.05) 50%,transparent 70%);
   background-size:200% 100%;animation:skm 1.4s linear infinite}
 
+/* ── lazy section: ยังไม่เลื่อนถึง = ยังไม่สร้าง DOM แสดง skeleton ค้างไว้กันจอกระตุก ── */
+.sec.pend .grid:empty,.sec.pend .rank-row:empty,.sec.pend .art-list:empty,.sec.pend .rl-list:empty,#rankFull:empty{
+  min-height:216px;border-radius:14px;background:var(--panel2);position:relative;overflow:hidden;display:block}
+.sec.pend .grid:empty::before,.sec.pend .rank-row:empty::before,.sec.pend .art-list:empty::before,#rankFull:empty::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.05) 50%,transparent 70%);
+  background-size:200% 100%;animation:skm 1.4s linear infinite}
+
 /* ── more button ── */
 .more-btn{display:block;width:100%;margin-top:14px;padding:12px;border-radius:14px;
   font-weight:600;font-size:.84rem;color:var(--g2);background:rgba(255,255,255,.05);
