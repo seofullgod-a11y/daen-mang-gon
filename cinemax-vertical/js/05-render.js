@@ -375,6 +375,92 @@ function closeArticle(fromPop){
   var ld = document.getElementById('ldArt'); if(ld) ld.remove();
 }
 
+/* ── หน้าหมวดหมู่/แท็ก (?t=tag) — เอื้อ SEO: URL จริง + meta + ItemList ── */
+function tagsOf(m){
+  var out = [], seen = {};
+  (m.genre || '').split(/[·,/|]/).concat((m.kw || '').split(','))
+    .forEach(function(t){ t = t.trim(); if(t && !seen[t]){ seen[t] = 1; out.push(t); } });
+  return out;
+}
+function allTags(){
+  var map = {};
+  ST.movies.forEach(function(m){ tagsOf(m).forEach(function(t){ map[t] = (map[t] || 0) + 1; }); });
+  return map;
+}
+function openCat(tag){
+  tag = String(tag || '').trim(); if(!tag) return;
+  var v = document.getElementById('catView');
+  if(!v.classList.contains('on')) navPush({ t: 'ct' });
+  v.classList.add('on');
+
+  var list = ST.movies.filter(function(m){ return tagsOf(m).indexOf(tag) >= 0; })
+    .slice().sort(popSort);
+  document.getElementById('catTitle').innerHTML = '<em>#</em>' + esc(tag);
+  document.getElementById('catSub').textContent = list.length
+    ? 'รวม ' + list.length + ' เรื่องในหมวด "' + tag + '" — เรียงตามความนิยม'
+    : '';
+
+  /* แท็กใกล้เคียง (หมวดอื่นที่มีเรื่องเยอะสุด) */
+  var rel = document.getElementById('catRel'); rel.innerHTML = '';
+  var map = allTags();
+  Object.keys(map).filter(function(t){ return t !== tag; })
+    .sort(function(a, b){ return map[b] - map[a]; }).slice(0, 8)
+    .forEach(function(t){
+      var s = el('<span>#' + esc(t) + '</span>');
+      s.addEventListener('click', function(){ openCat(t); });
+      rel.appendChild(s);
+    });
+
+  var g = document.getElementById('catGrid'); g.innerHTML = '';
+  if(!list.length){
+    g.innerHTML = '<div class="cmt-empty">ยังไม่มีเรื่องในหมวดนี้</div>';
+  } else {
+    list.forEach(function(m){ g.appendChild(el(cardHtml(m))); });
+  }
+
+  /* SEO */
+  document.title = 'รวมเรื่องแนว ' + tag + ' ดูฟรีทั้งหมด | CineMax';
+  var d = document.getElementById('mDesc');
+  if(d) d.setAttribute('content',
+    ('รวมซีรีส์สั้นและหนังแนว ' + tag + ' ' + (list.length ? list.length + ' เรื่อง ' : '') +
+     'ดูฟรีทุกอุปกรณ์ อัปเดตทุกวันที่ CineMax').slice(0, 155));
+  var ot = document.getElementById('ogTitle'); if(ot) ot.setAttribute('content', document.title);
+  var od = document.getElementById('ogDesc'); if(od) od.setAttribute('content', d ? d.getAttribute('content') : '');
+  var base = SITE.url || (location.origin + location.pathname);
+  var cn = document.getElementById('mCanon');
+  if(cn) cn.setAttribute('href', base + '?t=' + encodeURIComponent(tag));
+  try{
+    var ld = document.getElementById('ldCat');
+    if(!ld){ ld = document.createElement('script'); ld.type = 'application/ld+json'; ld.id = 'ldCat'; document.head.appendChild(ld); }
+    ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'ItemList',
+      name: 'รวมเรื่องแนว ' + tag,
+      itemListElement: list.slice(0, 20).map(function(m, i){
+        return { '@type': 'ListItem', position: i + 1, name: displayTitle(m),
+          url: base + '?m=' + encodeURIComponent(m.id) };
+      }) });
+  }catch(e){}
+  v.scrollTop = 0;
+}
+function closeCat(fromPop){
+  var v = document.getElementById('catView');
+  if(!v.classList.contains('on')) return;
+  var top = navTop();
+  if(!fromPop && top && top.t === 'ct'){ history.back(); return; }
+  v.classList.remove('on');
+  applySiteSEO();
+  var ld = document.getElementById('ldCat'); if(ld) ld.remove();
+}
+
+/* Esc ปิดหน้าที่เปิดอยู่ (ตอน player ไม่เปิด — player มี handler ของตัวเอง) */
+document.addEventListener('keydown', function(ev){
+  if(ev.key !== 'Escape') return;
+  if(document.getElementById('player').classList.contains('on')) return;
+  if(ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return;
+  if(document.getElementById('dtSheet').classList.contains('on')) closeDetail();
+  else if(document.getElementById('catView').classList.contains('on')) closeCat();
+  else if(document.getElementById('artView').classList.contains('on')) closeArticle();
+});
+
 /* ── หน้าสำรวจ: แถวโปสเตอร์ตามแนว (Netflix-style) ── */
 function renderExplore(){
   var box = document.getElementById('exploreRows'); if(!box) return;

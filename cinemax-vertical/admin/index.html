@@ -92,6 +92,7 @@ h2{font-family:'Kanit';font-size:1.05rem;margin-bottom:12px}
     <button data-p="movies" onclick="pane('movies')">🎬 หนัง/ซีรีส์</button>
     <button data-p="eps" onclick="pane('eps')">📺 ตอนซีรีส์</button>
     <button data-p="arts" onclick="pane('arts')">📖 บทความ</button>
+    <button data-p="tags" onclick="pane('tags')">🏷 แท็ก/หมวดหมู่</button>
     <button data-p="cmts" onclick="pane('cmts')">💬 คอมเมนต์</button>
     <button data-p="seo" onclick="pane('seo')">🔍 SEO / ตั้งค่า</button>
     <div class="sp"></div>
@@ -131,6 +132,17 @@ h2{font-family:'Kanit';font-size:1.05rem;margin-bottom:12px}
       <div class="bar"><h1>บทความ (SEO)</h1><button class="btn" onclick="editArt(null)">+ เขียนบทความ</button></div>
       <div class="card" id="artForm" style="display:none"></div>
       <div class="card"><table class="tbl" id="artTable"></table></div>
+    </div>
+
+    <!-- TAGS / CATEGORIES -->
+    <div class="pane" id="p-tags">
+      <div class="bar"><h1>แท็ก / หมวดหมู่</h1><button class="btn gh" onclick="renderTags()">รีเฟรช</button></div>
+      <div class="card">
+        <p class="muted">แท็กมาจาก 2 ช่องของแต่ละเรื่อง: <b>แนว</b> (คั่นด้วย ·) และ <b>คีย์เวิร์ด SEO</b> (คั่นด้วย , )
+        — ผู้ชมกดแท็กในหน้าเล่น/หน้ารายละเอียดแล้วจะเปิดหน้าหมวด <b>?t=แท็ก</b> ซึ่ง Google เก็บเข้า index ได้
+        · เปลี่ยนชื่อ/ลบที่นี่ = แก้ให้ทุกเรื่องที่ใช้แท็กนั้นพร้อมกัน</p>
+      </div>
+      <div class="card"><table class="tbl" id="tagTable"></table></div>
     </div>
 
     <!-- COMMENTS -->
@@ -211,6 +223,7 @@ function pane(p){
   document.querySelectorAll('.pane').forEach(function(n){ n.classList.remove('on'); });
   document.getElementById('p-' + p).classList.add('on');
   document.querySelectorAll('#side [data-p]').forEach(function(b){ b.classList.toggle('on', b.dataset.p === p); });
+  if(p === 'tags') renderTags();
 }
 
 /* ── MOVIES ── */
@@ -403,6 +416,73 @@ function delArt(slug){
     .catch(function(e){ toast('ลบไม่สำเร็จ: ' + e.message); });
 }
 
+/* ── TAGS / CATEGORIES ── */
+function tagMap(){
+  var map = {};
+  MV.forEach(function(r){
+    var d = r.data || {};
+    (d.gn || '').split(/[·,/|]/).forEach(function(t){ t = t.trim(); if(!t) return;
+      var e = (map[t] = map[t] || { gn: 0, kw: 0, ids: [] });
+      e.gn++; if(e.ids.indexOf(r.id) < 0) e.ids.push(r.id); });
+    (d.kw || '').split(',').forEach(function(t){ t = t.trim(); if(!t) return;
+      var e = (map[t] = map[t] || { gn: 0, kw: 0, ids: [] });
+      e.kw++; if(e.ids.indexOf(r.id) < 0) e.ids.push(r.id); });
+  });
+  return map;
+}
+function renderTags(){
+  var map = tagMap();
+  var keys = Object.keys(map).sort(function(a, b){ return map[b].ids.length - map[a].ids.length; });
+  var base = ((SETT.site_url || '')).replace(/\/+$/, '');
+  var t = document.getElementById('tagTable');
+  if(!keys.length){ t.innerHTML = '<tr><td class="muted">ยังไม่มีแท็ก — ใส่ในช่อง "แนว" หรือ "คีย์เวิร์ด SEO" ของแต่ละเรื่อง</td></tr>'; return; }
+  t.innerHTML = '<tr><th>แท็ก</th><th>ที่มา</th><th>จำนวนเรื่อง</th><th>หน้าเว็บ</th><th></th></tr>' +
+    keys.map(function(k){
+      var e = map[k];
+      var srcTxt = (e.gn && e.kw) ? 'แนว + คีย์เวิร์ด' : (e.gn ? 'แนว' : 'คีย์เวิร์ด SEO');
+      var link = base ? '<a href="' + esc(base) + '/?t=' + encodeURIComponent(k) + '" target="_blank" rel="noopener" style="color:var(--rose)">?t=' + esc(k) + '</a>'
+                      : '<span class="muted">?t=' + esc(k) + '</span>';
+      return '<tr><td><b>#' + esc(k) + '</b></td>' +
+        '<td class="muted">' + srcTxt + '</td>' +
+        '<td>' + e.ids.length + '</td>' +
+        '<td>' + link + '</td>' +
+        '<td><button class="act" onclick="renameTag(\'' + esc(k) + '\')">เปลี่ยนชื่อ</button>' +
+        '<button class="act" onclick="delTagAll(\'' + esc(k) + '\')">ลบ</button></td></tr>';
+    }).join('');
+}
+function _splitGn(s){ return String(s || '').split(/[·,/|]/).map(function(x){ return x.trim(); }).filter(Boolean); }
+function _splitKw(s){ return String(s || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean); }
+function updateTagAll(oldTag, newTag){
+  var rows = [];
+  MV.forEach(function(r){
+    var d = Object.assign({}, r.data || {});
+    var changed = false;
+    var gn = _splitGn(d.gn), i = gn.indexOf(oldTag);
+    if(i >= 0){ if(newTag) gn[i] = newTag; else gn.splice(i, 1); d.gn = gn.join('·'); changed = true; }
+    var kw = _splitKw(d.kw), j = kw.indexOf(oldTag);
+    if(j >= 0){ if(newTag) kw[j] = newTag; else kw.splice(j, 1); d.kw = kw.join(', '); changed = true; }
+    if(changed){ d.id = r.id; rows.push({ id: r.id, data: d, updated_at: new Date().toISOString() }); }
+  });
+  if(!rows.length){ toast('ไม่มีเรื่องที่ใช้แท็กนี้'); return; }
+  api('movies?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: rows })
+    .then(function(){
+      toast((newTag ? 'เปลี่ยนชื่อแท็กแล้ว' : 'ลบแท็กแล้ว') + ' (' + rows.length + ' เรื่อง) ✓');
+      loadMovies().then(renderTags);
+    })
+    .catch(function(e){ toast('ไม่สำเร็จ: ' + e.message); });
+}
+function renameTag(oldTag){
+  var nw = prompt('เปลี่ยนชื่อแท็ก "' + oldTag + '" เป็น: (มีผลกับทุกเรื่องที่ใช้แท็กนี้)', oldTag);
+  if(nw == null) return;
+  nw = nw.trim();
+  if(!nw || nw === oldTag) return;
+  updateTagAll(oldTag, nw);
+}
+function delTagAll(tag){
+  if(!confirm('ลบแท็ก "' + tag + '" ออกจากทุกเรื่อง?')) return;
+  updateTagAll(tag, null);
+}
+
 /* ── COMMENTS ── */
 function loadCmts(){
   api('comments?select=*&order=created_at.desc&limit=100').then(function(rows){
@@ -464,6 +544,17 @@ function genSitemap(){
     if(a.status !== 'published') return;
     urls.push('  <url><loc>' + base + '/?a=' + encodeURIComponent(a.slug) + '</loc><lastmod>' +
       (a.updated_at || a.created_at || today).slice(0, 10) + '</lastmod><priority>0.7</priority></url>');
+  });
+  /* หน้าหมวดหมู่/แท็ก (?t=) — นับเฉพาะเรื่องที่ไม่ซ่อน */
+  var tagSeen = {};
+  MV.forEach(function(r){
+    var d = r.data || {};
+    if(d.st === 'hidden') return;
+    String(d.gn || '').split(/[·,/|]/).concat(String(d.kw || '').split(','))
+      .forEach(function(t){ t = t.trim(); if(t) tagSeen[t] = 1; });
+  });
+  Object.keys(tagSeen).forEach(function(t){
+    urls.push('  <url><loc>' + base + '/?t=' + encodeURIComponent(t) + '</loc><lastmod>' + today + '</lastmod><priority>0.6</priority></url>');
   });
   var xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls.join('\n') + '\n</urlset>\n';

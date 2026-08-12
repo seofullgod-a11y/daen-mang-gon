@@ -18,6 +18,7 @@
     /* เปิดจากลิงก์ ?m=id (หนัง) / ?a=slug (บทความ) — URL แบบนี้ Google เก็บเข้า index ได้ */
     var qs = new URLSearchParams(location.search);
     if(qs.get('a')){ setTimeout(function(){ openArticle(qs.get('a')); }, 100); }
+    else if(qs.get('t')){ setTimeout(function(){ openCat(qs.get('t')); }, 100); }
     else if(qs.get('m') && ST.movies.some(function(m){ return m.id === qs.get('m'); })){
       setTimeout(function(){ openDetail(qs.get('m')); }, 100);
     }

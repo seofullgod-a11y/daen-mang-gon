@@ -363,20 +363,27 @@ function buildRail(m){
 }
 
 function buildCaption(m, p){
-  /* แท็ก SEO: แนว + คีย์เวิร์ดจากหลังบ้าน (kw) — กดแล้วค้นหาคำนั้นได้ */
-  var raw = (m.genre || '').split(/[·,/|]/).concat((m.kw || '').split(','));
-  var seen = {}, tags = [];
-  raw.forEach(function(g){ g = g.trim(); if(g && !seen[g]){ seen[g] = 1; tags.push(g); } });
-  tags = tags.slice(0, 6);
+  /* แท็ก SEO: แนว + คีย์เวิร์ดจากหลังบ้าน (kw) — กดแล้วเปิดหน้าหมวดหมู่ (?t=) */
+  var tags = (typeof tagsOf === 'function' ? tagsOf(m) : []).slice(0, 6);
   var tagHtml = tags.map(function(t, i){
     return '<span' + (i === 0 ? ' class="hl"' : '') + ' data-q="' + esc(t) +
-      '" onclick="event.stopPropagation();tagSearch(this.dataset.q)">#' + esc(t) + '</span>';
+      '" role="button" onclick="event.stopPropagation();tagCat(this.dataset.q)">#' + esc(t) + '</span>';
   }).join('');
   var desc = (p.ep && p.ep.desc) || m.desc || '';
   if(desc.length > 120) desc = desc.slice(0, 120) + '…';
   document.getElementById('plBot').innerHTML =
     (tagHtml ? '<div class="pl-tags">' + tagHtml + '</div>' : '') +
-    '<div class="pl-cap"><b>' + esc(displayTitle(m)) + '</b>' + (desc ? ' — ' + esc(desc) : '') + '</div>';
+    /* แตะชื่อเรื่อง/เรื่องย่อ → เปิดหน้ารายละเอียด */
+    '<div class="pl-cap" role="button" data-mid="' + esc(m.id) +
+      '" onclick="event.stopPropagation();openDetail(this.dataset.mid)"><b>' +
+      esc(displayTitle(m)) + '</b>' + (desc ? ' — ' + esc(desc) : '') + '</div>';
+}
+
+/* กดแท็กในหน้าเล่น → ปิด player แล้วเปิดหน้าหมวดหมู่นั้น */
+function tagCat(q){
+  if(!q) return;
+  _plAfter = function(){ openCat(q); };
+  closePlayer();
 }
 
 /* ── SEO: อัปเดต title/description/JSON-LD ตามเรื่องที่ดู ── */

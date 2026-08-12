@@ -41,6 +41,13 @@ function openDetail(id){
         '<button class="dt-ico" id="dtFav" onclick="dtFav()">' + (faved ? IC.heartFill : IC.heart) + '</button>' +
         '<button class="dt-ico" onclick="dtShare()">' + IC.share + '</button></div>' +
       (m.desc ? '<p class="dt-desc">' + esc(m.desc) + '</p>' : '') +
+      /* แท็กหมวดหมู่ (แนว + คีย์เวิร์ด SEO จากหลังบ้าน) — กดแล้วเปิดหน้าหมวด ?t= */
+      (function(){
+        var tg = (typeof tagsOf === 'function' ? tagsOf(m) : []).slice(0, 8);
+        return tg.length ? '<div class="dt-tags">' + tg.map(function(t){
+          return '<span data-q="' + esc(t) + '" role="button" onclick="dtTag(this.dataset.q)">#' + esc(t) + '</span>';
+        }).join('') + '</div>' : '';
+      })() +
       crew +
       (m.type === 'series' ? '<div class="dt-eps-h">ตอนทั้งหมด</div><div class="dt-eps" id="dtEps"><span class="spin"></span></div>' : '') +
     '</div>';
@@ -112,6 +119,19 @@ function dtFav(){
   toast(on ? 'เพิ่มในรายการโปรดแล้ว' : 'นำออกจากรายการโปรดแล้ว');
   renderProfile();
 }
+/* กดแท็กในหน้ารายละเอียด → ปิด detail (และ player ถ้าเปิดอยู่) แล้วเปิดหน้าหมวดหมู่ */
+function dtTag(q){
+  if(!q) return;
+  dtGo(function(){
+    if(document.getElementById('player').classList.contains('on')){
+      _plAfter = function(){ openCat(q); };
+      closePlayer();
+    } else {
+      openCat(q);
+    }
+  });
+}
+
 function dtShare(){
   if(!_dtMovie) return;
   if(typeof shareCard === 'function') shareCard(_dtMovie);
