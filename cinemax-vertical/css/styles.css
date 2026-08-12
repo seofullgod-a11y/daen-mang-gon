@@ -268,17 +268,19 @@ svg{display:block}
 .pl-arrows{display:none}
 
 /* rail */
-.rail{position:absolute;right:10px;bottom:128px;z-index:12;display:flex;flex-direction:column;gap:19px;align-items:center}
-.rail .act{display:flex;flex-direction:column;align-items:center;gap:5px}
-.rail .act .ic{width:48px;height:48px;border-radius:50%;background:rgba(15,15,15,.5);backdrop-filter:blur(8px);
-  display:grid;place-items:center;border:1px solid rgba(255,255,255,.14);transition:transform .15s;color:#fff}
+.rail{position:absolute;right:8px;bottom:118px;z-index:12;display:flex;flex-direction:column;gap:11px;align-items:center}
+.rail .act{display:flex;flex-direction:column;align-items:center;gap:3px}
+.rail .act .ic{width:37px;height:37px;border-radius:50%;background:rgba(15,15,15,.34);backdrop-filter:blur(8px);
+  display:grid;place-items:center;border:1px solid rgba(255,255,255,.1);transition:transform .15s;color:#fff}
+.rail .act .ic .f7-icons{font-size:18px!important}
+.rail .act .ic svg{width:18px;height:18px}
 .rail .act:active .ic{transform:scale(.85)}
 .rail .act.liked .ic{color:var(--red);border-color:rgba(229,9,20,.5);background:rgba(229,9,20,.16)}
 .rail .act.liked .ic svg{fill:var(--red)}
 .rail .act.faved .ic{color:var(--gold);border-color:rgba(229,9,20,.5);background:rgba(229,9,20,.14)}
 .rail .act.faved .ic svg{fill:var(--gold)}
-.rail .act .n{font-size:.66rem;font-weight:600;text-shadow:0 1px 6px rgba(0,0,0,.8)}
-.rail .avatar{width:47px;height:47px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;position:relative;cursor:pointer;
+.rail .act .n{font-size:.56rem;font-weight:600;color:rgba(255,255,255,.85);text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.rail .avatar{width:38px;height:38px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;position:relative;cursor:pointer;
   box-shadow:0 0 0 2px rgba(0,0,0,.35), 0 6px 18px rgba(0,0,0,.5)}
 
 /* caption */

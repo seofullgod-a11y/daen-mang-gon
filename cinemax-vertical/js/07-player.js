@@ -167,9 +167,8 @@ function mountMedia(i){
     document.getElementById('muteBtn').style.display = 'grid';
     var sb = document.getElementById('speedBtn');
     sb.style.display = 'grid'; sb.textContent = _speed + 'x';
-    var pb = document.getElementById('pipBtn');
-    var pipOk = (document.pictureInPictureEnabled && v.requestPictureInPicture) || v.webkitSetPresentationMode;
-    pb.style.display = pipOk ? 'grid' : 'none';
+    var pb = document.getElementById('pipBtn');   // ปุ่มจอลอยถูกถอดออกแล้ว — กันไว้เผื่อ cache เก่า
+    if(pb) pb.style.display = 'none';
     updateMuteBtn();
   } else {
     var f = document.createElement('iframe');
@@ -178,7 +177,8 @@ function mountMedia(i){
     md.appendChild(f);
     document.getElementById('muteBtn').style.display = 'none';
     document.getElementById('speedBtn').style.display = 'none';
-    document.getElementById('pipBtn').style.display = 'none';
+    var pb2 = document.getElementById('pipBtn');
+    if(pb2) pb2.style.display = 'none';
     document.getElementById('progFill').style.width = '0%';
   }
 }
