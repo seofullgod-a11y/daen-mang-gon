@@ -263,27 +263,41 @@ function lvSend(){
   if(LV.ch){ try{ LV.ch.send({ type: 'broadcast', event: 'chat', payload: { n: _lvNick, b: b } }); }catch(e){} }
 }
 
-/* ── หัวใจลอย ── */
+/* ── รีแอคชันลอยสไตล์ Facebook Live ── */
+var LV_REACTS = {
+  heart: '<span class="fxr fxr-heart"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>',
+  like:  '<span class="fxr fxr-like"><svg viewBox="0 0 24 24"><path fill="#fff" d="M2 21h4V9H2v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg></span>',
+  wow:   '<span class="fxr fxr-emo">😮</span>',
+  haha:  '<span class="fxr fxr-emo">😆</span>'
+};
 var _lvLastReact = 0;
-function lvHeart(emo){
+function lvHeart(kind){
   var now = Date.now();
   if(now - _lvLastReact < 250) return;
   _lvLastReact = now;
-  emo = emo || '❤️';
-  lvSpawnHeart(emo);
-  if(LV.ch){ try{ LV.ch.send({ type: 'broadcast', event: 'react', payload: { e: emo } }); }catch(e){} }
+  kind = LV_REACTS[kind] ? kind : 'heart';
+  lvSpawnHeart(kind);
+  if(LV.ch){ try{ LV.ch.send({ type: 'broadcast', event: 'react', payload: { e: kind } }); }catch(e){} }
 }
-function lvSpawnHeart(emo){
+function lvSpawnHeart(e){
   var layer = document.getElementById('lvReacts'); if(!layer) return;
   var d = document.createElement('div');
   d.className = 'fx-react';
-  d.textContent = emo;
-  d.style.left = (72 + Math.random() * 18) + '%';
+  /* รองรับทั้ง key ใหม่ (heart/like/wow/haha) และอีโมจิดิบจากเวอร์ชันเก่า */
+  d.innerHTML = LV_REACTS[e] || ('<span class="fxr fxr-emo">' + esc(String(e || '❤️')) + '</span>');
+  d.style.left = (74 + Math.random() * 16) + '%';
   d.style.setProperty('--dx', (Math.random() * 60 - 30) + 'px');
-  d.style.setProperty('--dur', (1.8 + Math.random()) + 's');
+  d.style.setProperty('--dur', (1.9 + Math.random()) + 's');
   layer.appendChild(d);
-  setTimeout(function(){ d.remove(); }, 3000);
+  setTimeout(function(){ d.remove(); }, 3200);
 }
+/* กด Enter ในช่องคอมเมนต์ = ส่ง */
+(function(){
+  var inp = document.getElementById('lvInput');
+  if(inp) inp.addEventListener('keydown', function(ev){
+    if(ev.key === 'Enter'){ ev.preventDefault(); lvSend(); }
+  });
+})();
 
 /* ── เช็กสถานะไลฟ์ทุก 60 วิ — เปิด/ปิดไลฟ์จากหลังบ้านแล้วผู้ชมที่ค้างหน้าเว็บเห็นเอง ── */
 setInterval(function(){
