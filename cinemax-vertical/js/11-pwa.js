@@ -43,11 +43,21 @@ window.addEventListener('appinstalled', function(){
 function showInstallUI(){
   if(isStandalone()) return;
   var row = document.getElementById('rowInstall');
-  if(row) row.style.display = 'flex';   // ปุ่มในหน้าโปรไฟล์เสมอ
-  if(localStorage.getItem(LS_INSTALL_DISMISS)) return;   // แบนเนอร์: ถ้าเคยปิดแล้วไม่ต้องเด้ง
+  if(row) row.style.display = 'flex';   // ปุ่มในหน้าโปรไฟล์มีเสมอ (ติดตั้งทีหลังได้)
+  if(localStorage.getItem(LS_INSTALL_DISMISS)) return;   // เคยเห็นแล้ว = ไม่เด้งอีกตลอดไป
   setTimeout(function(){
     var bar = document.getElementById('installBar');
-    if(bar && !isStandalone()) bar.classList.add('on');
+    if(!bar || isStandalone()) return;
+    bar.classList.add('on');
+    /* โชว์ครั้งเดียวเท่านั้น — บันทึกทันทีที่โชว์ */
+    localStorage.setItem(LS_INSTALL_DISMISS, '1');
+    /* ผู้ใช้กดอะไรก็ตามในเว็บ (เมนู/เล่น/การ์ด) ที่ไม่ใช่ตัวแบนเนอร์ → แบนเนอร์หายทันที */
+    var onTap = function(ev){
+      if(ev.target && ev.target.closest && ev.target.closest('#installBar')) return;
+      document.removeEventListener('pointerdown', onTap, true);
+      hideInstallBar();
+    };
+    document.addEventListener('pointerdown', onTap, true);
   }, 2500);
 }
 
