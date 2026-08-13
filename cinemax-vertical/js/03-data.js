@@ -115,11 +115,13 @@ function loadSettings(){
         if(r.key === 'og_image' && r.value) SITE.og = r.value;
         if(r.key === 'site_url' && r.value) SITE.url = r.value;
         if(r.key.indexOf('ui_') === 0) ui[r.key] = r.value;
+        if(r.key.indexOf('live_') === 0) LIVECFG[r.key] = r.value;
       });
       UICFG = ui;
       try{ localStorage.setItem('cxv_uicfg', JSON.stringify(ui)); }catch(e){}
       applySiteSEO();
       applyUICustom();
+      if(typeof renderLiveBanner === 'function') renderLiveBanner();
     });
 }
 

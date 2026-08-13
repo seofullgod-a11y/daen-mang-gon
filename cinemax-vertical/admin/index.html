@@ -136,6 +136,7 @@ button.tag{cursor:pointer}
     <button data-p="eps" onclick="pane('eps')">📺 ตอนซีรีส์</button>
     <button data-p="arts" onclick="pane('arts')">📖 บทความ</button>
     <button data-p="cmts" onclick="pane('cmts')">💬 คอมเมนต์</button>
+    <button data-p="live" onclick="pane('live')">🔴 ไลฟ์</button>
     <div class="grp">หน้าตาเว็บ</div>
     <button data-p="theme" onclick="pane('theme')">🎨 ปรับแต่งเว็บ (UX/UI)</button>
     <div class="grp">SEO / การตลาด</div>
@@ -206,6 +207,30 @@ button.tag{cursor:pointer}
       <div class="bar"><h1>บทความ (SEO)</h1><button class="btn" onclick="editArt(null)">+ เขียนบทความ</button></div>
       <div class="card" id="artForm" style="display:none"></div>
       <div class="card"><table class="tbl" id="artTable"></table></div>
+    </div>
+
+    <!-- LIVE -->
+    <div class="pane" id="p-live">
+      <div class="bar"><h1>🔴 ไลฟ์พรีเมียร์</h1><span class="tag" id="lvStatus"></span></div>
+      <div class="card">
+        <p class="muted">เปิดไลฟ์ = หน้าแรกของผู้ชมทุกคนขึ้นแบนเนอร์ "LIVE กำลังไลฟ์" (มีนับถอยหลังถ้าตั้งเวลาล่วงหน้า)
+        กดเข้าไปเจอจอไลฟ์เต็มจอ: วิดีโอเล่น<b>ตรงตำแหน่งเดียวกันทุกคน</b>ตามเวลาเริ่มจริง (เลื่อน/หยุดไม่ได้เหมือนไลฟ์แท้ๆ)
+        + แชทสด + หัวใจลอย + ยอดผู้ชมเรียลไทม์</p>
+        <label>เรื่องที่จะไลฟ์ *</label>
+        <select id="lv_movie"></select>
+        <div class="row2">
+          <div><label>ตอนที่ (เฉพาะซีรีส์ — เว้นว่าง = วิดีโอหลักของเรื่อง)</label><input id="lv_ep" type="number" min="1" placeholder="เช่น 1"></div>
+          <div><label>เวลาเริ่ม (เว้นว่าง = เริ่มทันทีที่เปิด)</label><input id="lv_start" type="datetime-local"></div>
+        </div>
+        <label>ชื่อไลฟ์ (โชว์บนแบนเนอร์+หัวจอ — เว้นว่าง = 'พรีเมียร์ "ชื่อเรื่อง"')</label>
+        <input id="lv_title" placeholder='เช่น 🔴 พรีเมียร์ EP.1 พร้อมกันทั่วประเทศ!'>
+        <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" onclick="saveLive(true)">🔴 เริ่มไลฟ์ / บันทึก</button>
+          <button class="btn dn" onclick="endLive()">⏹ จบไลฟ์</button>
+        </div>
+        <p class="muted" style="margin-top:12px">💡 ทริค: ตั้งเวลาล่วงหน้า 1-2 ชม. แล้วโพสต์ลิงก์เว็บลงโซเชียล —
+        ผู้ชมจะเห็นนับถอยหลังในหน้าแรก สร้างกระแสรอดูพร้อมกัน</p>
+      </div>
     </div>
 
     <!-- THEME / UI CUSTOMIZER -->
@@ -390,6 +415,7 @@ function pane(p){
   document.querySelectorAll('#side [data-p]').forEach(function(b){ b.classList.toggle('on', b.dataset.p === p); });
   if(p === 'tags') renderTags();
   if(p === 'theme') fillTheme();
+  if(p === 'live') fillLive();
 }
 
 /* ── STATS (ยอดวิว/ไลก์) ── */
@@ -699,6 +725,58 @@ function delArt(slug){
   api('articles?slug=eq.' + encodeURIComponent(slug), { method: 'DELETE' })
     .then(function(){ toast('ลบแล้ว'); loadArts(); })
     .catch(function(e){ toast('ลบไม่สำเร็จ: ' + e.message); });
+}
+
+/* ── LIVE ── */
+function fillLive(){
+  var sel = document.getElementById('lv_movie');
+  sel.innerHTML = '<option value="">— เลือกเรื่อง —</option>' + MV.map(function(r){
+    var d = r.data || {};
+    return '<option value="' + esc(r.id) + '">' + esc(d.t || r.id) + (d.tp === 'series' ? ' (ซีรีส์)' : '') + '</option>';
+  }).join('');
+  sel.value = SETT.live_movie || '';
+  document.getElementById('lv_ep').value = SETT.live_ep || '';
+  document.getElementById('lv_title').value = SETT.live_title || '';
+  var st = SETT.live_start ? new Date(SETT.live_start) : null;
+  document.getElementById('lv_start').value = st && !isNaN(st)
+    ? new Date(st.getTime() - st.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+  lvStatusBadge();
+}
+function lvStatusBadge(){
+  var b = document.getElementById('lvStatus');
+  if((SETT.live_on || '0') !== '1'){ b.className = 'tag off'; b.textContent = 'ปิดอยู่'; return; }
+  var start = SETT.live_start ? new Date(SETT.live_start).getTime() : 0;
+  if(start && Date.now() < start){ b.className = 'tag wn'; b.textContent = 'ตั้งเวลารอเริ่ม'; }
+  else { b.className = 'tag ok'; b.textContent = '🔴 กำลังไลฟ์'; }
+}
+function saveLive(on){
+  var mid = fv('lv_movie');
+  if(!mid){ toast('เลือกเรื่องก่อนครับ'); return; }
+  var startLocal = fv('lv_start');
+  var startIso = '';
+  if(startLocal){ var d = new Date(startLocal); if(!isNaN(d)) startIso = d.toISOString(); }
+  else startIso = new Date().toISOString();   // ไม่ตั้งเวลา = เริ่มเดี๋ยวนี้ (ใช้ sync ตำแหน่งวิดีโอ)
+  var rows = [
+    { key: 'live_on', value: on ? '1' : '0' },
+    { key: 'live_movie', value: mid },
+    { key: 'live_ep', value: fv('lv_ep') },
+    { key: 'live_title', value: fv('lv_title') },
+    { key: 'live_start', value: startIso }
+  ];
+  api('settings?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: rows })
+    .then(function(){
+      rows.forEach(function(r){ SETT[r.key] = r.value; });
+      lvStatusBadge();
+      toast(on ? '🔴 เปิดไลฟ์แล้ว! ผู้ชมเห็นแบนเนอร์ทันทีที่รีเฟรช' : 'บันทึกแล้ว');
+    })
+    .catch(function(e){ toast('ไม่สำเร็จ: ' + e.message); });
+}
+function endLive(){
+  if(!confirm('จบไลฟ์ตอนนี้?')) return;
+  api('settings?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+    body: [{ key: 'live_on', value: '0' }] })
+    .then(function(){ SETT.live_on = '0'; lvStatusBadge(); toast('จบไลฟ์แล้ว ✓'); })
+    .catch(function(e){ toast('ไม่สำเร็จ: ' + e.message); });
 }
 
 /* ── THEME / UI CUSTOMIZER ── */

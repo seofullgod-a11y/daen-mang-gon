@@ -59,6 +59,7 @@
     </div>
     <div class="wrap">
       <div id="demo-banner"><span style="flex:1">⚠️ เชื่อมต่อฐานข้อมูลไม่สำเร็จ — กำลังแสดงข้อมูลตัวอย่าง</span><button class="db-retry" onclick="retryConnect()">ลองใหม่</button></div>
+      <div id="lvBanner" style="display:none"></div>
       <div class="chips" id="chips"></div>
       <div class="bb" id="billboard"></div>
       <div class="sec" id="sec-cont" style="display:none">
@@ -92,6 +93,25 @@
   <div id="artView">
     <button class="art-back icobtn" onclick="closeArticle()" aria-label="กลับ" data-ic="back"></button>
     <article class="art-page" id="artBody"></article>
+  </div>
+
+  <!-- LIVE MODE (ไลฟ์พรีเมียร์) -->
+  <div id="liveView">
+    <div id="lvMedia"></div>
+    <div class="lv-shade"></div>
+    <div id="lvReacts"></div>
+    <div class="lv-top">
+      <span class="lv-badge"><i></i>LIVE</span>
+      <span class="lv-count">👁 <b id="lvCount">1</b></span>
+      <div class="lv-tt" id="lvTitle"></div>
+      <button class="icobtn" onclick="closeLive()" aria-label="ปิด" data-ic="xmark"></button>
+    </div>
+    <div id="lvChat"></div>
+    <div class="lv-bar">
+      <input id="lvInput" placeholder="พิมพ์แชท..." maxlength="200" autocomplete="off">
+      <button class="lv-send" onclick="lvSend()" aria-label="ส่ง" data-ic="send"></button>
+      <button class="lv-heart" onclick="lvHeart()" aria-label="ส่งหัวใจ">❤️</button>
+    </div>
   </div>
 
   <!-- CATEGORY / TAG VIEW (?t=tag — หน้าหมวดหมู่ SEO) -->
@@ -283,6 +303,7 @@
 <script src="js/15-live.js"></script>
 <script src="js/16-party.js"></script>
 <script src="js/17-sharecard.js"></script>
+<script src="js/18-livemode.js"></script>
 <script src="js/10-boot.js"></script>
 <script src="js/11-pwa.js"></script>
 <script src="js/12-hover.js"></script>

@@ -22,6 +22,7 @@ window.addEventListener('popstate', function(){
   else if(top.t === 'dt') closeDetail(true);
   else if(top.t === 'art') closeArticle(true);
   else if(top.t === 'ct') closeCat(true);
+  else if(top.t === 'lv') closeLive(true);
   else if(top.t === 'scr') go(top.from, true);
 });
 

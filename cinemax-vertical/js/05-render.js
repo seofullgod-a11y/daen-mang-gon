@@ -467,6 +467,7 @@ document.addEventListener('keydown', function(ev){
   if(document.getElementById('player').classList.contains('on')) return;
   if(ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return;
   if(document.getElementById('dtSheet').classList.contains('on')) closeDetail();
+  else if(document.getElementById('liveView') && document.getElementById('liveView').classList.contains('on')) closeLive();
   else if(document.getElementById('catView').classList.contains('on')) closeCat();
   else if(document.getElementById('artView').classList.contains('on')) closeArticle();
 });
