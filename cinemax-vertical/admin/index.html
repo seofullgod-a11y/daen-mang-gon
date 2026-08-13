@@ -147,7 +147,7 @@ button.tag{cursor:pointer}
     <div class="sp"></div>
     <a class="nav" id="siteLink" href="../" target="_blank" rel="noopener">🌐 เปิดหน้าเว็บ</a>
     <button onclick="logout()">🚪 ออกจากระบบ</button>
-    <div class="ver">Admin v2.0</div>
+    <div class="ver">Admin v2.1</div>
   </div>
   <div id="main">
 
@@ -381,9 +381,23 @@ function fmtN(n){ n = +n || 0;
   return n.toLocaleString(); }
 
 /* ── AUTH ── */
+function keyRole(k){
+  /* คีย์ Supabase เป็น JWT — อ่าน role จากข้างในได้เลย */
+  try{
+    var p = JSON.parse(atob((k.split('.')[1] || '').replace(/-/g, '+').replace(/_/g, '/')));
+    return p.role || '';
+  }catch(e){ return ''; }
+}
 function login(){
   var k = document.getElementById('skInput').value.trim();
   if(!k){ document.getElementById('loginErr').textContent = 'กรอกคีย์ก่อนครับ'; return; }
+  var role = keyRole(k);
+  if(role && role !== 'service_role'){
+    document.getElementById('loginErr').innerHTML =
+      'คีย์นี้คือ <b>' + role + ' key</b> (คีย์สาธารณะของหน้าเว็บ) — อ่านได้แต่เขียน/บันทึกอะไรไม่ได้<br>' +
+      'ต้องใช้ <b>service_role key</b>: Supabase → Settings → API → ช่อง <b>service_role (secret)</b> → กด Reveal แล้วคัดลอกมาวาง';
+    return;
+  }
   SK = k;
   document.getElementById('loginBtn').disabled = true;
   api('movies?select=id&limit=1').then(function(){
