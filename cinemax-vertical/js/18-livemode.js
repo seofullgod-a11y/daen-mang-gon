@@ -9,12 +9,22 @@ var _lvNick = localStorage.getItem('cxv_nick') || '';
 
 /* ── ประเมินสถานะไลฟ์จาก settings ── */
 function liveState(){
-  if((LIVECFG.live_on || '0') !== '1') return { s: 'off' };
-  var m = ST.movies.find(function(x){ return x.id === LIVECFG.live_movie; });
-  if(!m) return { s: 'off' };
+  if((LIVECFG.live_on || '0') !== '1' || !LIVECFG.live_movie) return { s: 'off' };
+  /* เรื่องอาจยังไม่อยู่ในลิสต์ (โหลดไม่เสร็จ หรือถูกซ่อนรอพรีเมียร์) → ไลฟ์ยังต้องทำงาน */
+  var m = ST.movies.find(function(x){ return x.id === LIVECFG.live_movie; }) || null;
   var start = LIVECFG.live_start ? new Date(LIVECFG.live_start).getTime() : 0;
   if(start && Date.now() < start) return { s: 'wait', m: m, start: start };
   return { s: 'on', m: m, start: start };
+}
+/* ดึงข้อมูลเรื่องที่ไลฟ์ตรงจาก Supabase (กรณีเรื่องถูกซ่อน ไม่อยู่ใน ST.movies) */
+function lvFetchMovie(cb){
+  var inList = ST.movies.find(function(x){ return x.id === LIVECFG.live_movie; });
+  if(inList){ cb(inList); return; }
+  fetch(SB_URL + '/rest/v1/movies?select=id,data&id=eq.' + encodeURIComponent(LIVECFG.live_movie),
+    { headers: sbHeaders() })
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .catch(function(){ return []; })
+    .then(function(rows){ cb(rows[0] ? normMovie(rows[0].data, rows[0]) : null); });
 }
 
 /* ── แบนเนอร์หน้าแรก (+ นับถอยหลังก่อนเริ่ม) ── */
@@ -33,7 +43,7 @@ function renderLiveBanner(){
     var fc = document.getElementById('lvFabCd');
     if(fc) fc.textContent = '';
   }
-  var title = LIVECFG.live_title || ('พรีเมียร์ "' + displayTitle(st.m) + '"');
+  var title = LIVECFG.live_title || (st.m ? 'พรีเมียร์ "' + displayTitle(st.m) + '"' : 'ไลฟ์พิเศษกำลังมา');
   b.style.display = 'flex';
   b.innerHTML =
     '<span class="lvb-dot"></span>' +
@@ -65,14 +75,19 @@ function openLive(){
   if(!v.classList.contains('on')) navPush({ t: 'lv' });
   v.classList.add('on');
   document.body.classList.add('player-open');
-  document.getElementById('lvTitle').textContent =
-    LIVECFG.live_title || ('พรีเมียร์ "' + displayTitle(st.m) + '"');
   document.getElementById('lvChat').innerHTML = '';
   updateLvCount(1);
-  lvMount(st);
   lvJoin(st);
-  if(st.s === 'on' && typeof bumpView === 'function') bumpView(st.m.id);
   lvSys(st.s === 'wait' ? 'ไลฟ์กำลังจะเริ่ม รอสักครู่...' : 'ยินดีต้อนรับสู่ไลฟ์ 🎉 ทักทายกันได้เลย');
+  /* โหลดข้อมูลเรื่อง (รองรับเรื่องที่ถูกซ่อนรอพรีเมียร์) แล้วค่อยเริ่มวิดีโอ */
+  lvFetchMovie(function(m){
+    if(!document.getElementById('liveView').classList.contains('on')) return;
+    st.m = m;
+    document.getElementById('lvTitle').textContent =
+      LIVECFG.live_title || (m ? 'พรีเมียร์ "' + displayTitle(m) + '"' : 'ไลฟ์พิเศษ');
+    lvMount(st);
+    if(st.s === 'on' && m && typeof bumpView === 'function') bumpView(m.id);
+  });
 }
 function closeLive(fromPop){
   var v = document.getElementById('liveView');
@@ -87,6 +102,7 @@ function closeLive(fromPop){
 
 /* ── media: เล่นวิดีโอ sync ตามเวลาเริ่มไลฟ์ ── */
 function lvVideoUrl(st, cb){
+  if(!st.m){ cb(''); return; }
   /* ซีรีส์ + ระบุตอน → ใช้วิดีโอของตอนนั้น */
   var epNo = parseInt(LIVECFG.live_ep) || 0;
   if(st.m.type === 'series' && epNo){
@@ -157,9 +173,10 @@ function lvMount(st){
 }
 function lvEnded(){
   var md = document.getElementById('lvMedia');
+  var pub = ST.movies.some(function(x){ return x.id === LIVECFG.live_movie; });
   md.innerHTML = '<div class="lv-wait"><b>ไลฟ์จบแล้ว ขอบคุณที่รับชม 🙏</b>' +
-    '<button class="more-btn" style="max-width:260px;margin-top:14px" ' +
-    'onclick="closeLive();openDetail(LIVECFG.live_movie)">ดูย้อนหลัง / ดูรายละเอียดเรื่อง</button></div>';
+    (pub ? '<button class="more-btn" style="max-width:260px;margin-top:14px" ' +
+      'onclick="closeLive();openDetail(LIVECFG.live_movie)">ดูย้อนหลัง / ดูรายละเอียดเรื่อง</button>' : '') + '</div>';
 }
 function lvUnmount(){
   if(LV.hls){ try{ LV.hls.destroy(); }catch(e){} LV.hls = null; }
@@ -267,3 +284,20 @@ function lvSpawnHeart(emo){
   layer.appendChild(d);
   setTimeout(function(){ d.remove(); }, 3000);
 }
+
+/* ── เช็กสถานะไลฟ์ทุก 60 วิ — เปิด/ปิดไลฟ์จากหลังบ้านแล้วผู้ชมที่ค้างหน้าเว็บเห็นเอง ── */
+setInterval(function(){
+  if(document.visibilityState !== 'visible' || ST.demo) return;
+  fetch(SB_URL + '/rest/v1/settings?select=key,value&key=like.live_*', { headers: sbHeaders() })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .catch(function(){ return null; })
+    .then(function(rows){
+      if(!rows) return;
+      var cfg = {};
+      rows.forEach(function(r){ cfg[r.key] = r.value; });
+      if(JSON.stringify(cfg) !== JSON.stringify(LIVECFG)){
+        LIVECFG = cfg;
+        renderLiveBanner();
+      }
+    });
+}, 60000);

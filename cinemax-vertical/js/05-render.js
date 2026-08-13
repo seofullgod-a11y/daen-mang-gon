@@ -115,6 +115,7 @@ function renderAll(){
   var db = document.getElementById('demo-banner');
   if(db) db.style.display = ST.demo ? 'flex' : 'none';
   if(typeof applyUICustom === 'function') applyUICustom();   // ธีม/การซ่อนส่วนจากหลังบ้าน
+  if(typeof renderLiveBanner === 'function') renderLiveBanner();   // กัน race: settings มาก่อนหนังโหลดเสร็จ
 }
 
 function visMovies(){
