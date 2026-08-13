@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>CineMax — ตรวจสอบระบบ</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans Thai',sans-serif;background:#0b0b0b;color:#fff;padding:24px;max-width:640px;margin:0 auto}
+h1{font-size:1.2rem;margin-bottom:4px}
+.muted{color:#8a8a8a;font-size:.8rem;margin-bottom:18px}
+.item{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.item .st{font-size:1.1rem;flex:none;width:28px;text-align:center}
+.item b{display:block;font-size:.9rem}
+.item span{display:block;font-size:.78rem;color:#a8a8a8;margin-top:2px;line-height:1.5}
+.verdict{margin-top:20px;padding:16px;border-radius:14px;font-size:.9rem;line-height:1.6}
+.verdict.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.4)}
+.verdict.bad{background:rgba(229,9,20,.12);border:1px solid rgba(229,9,20,.4)}
+code{background:#1c1c1c;padding:1px 6px;border-radius:5px;font-size:.78rem}
+</style>
+</head>
+<body>
+<h1>🔎 ตรวจสอบระบบ CineMax</h1>
+<p class="muted">หน้านี้เช็กว่าไฟล์ครบไหม + ไลฟ์ตั้งค่าถูกไหม (ลบไฟล์นี้ทิ้งได้ ไม่กระทบเว็บ)</p>
+<div id="out"></div>
+<div id="verdict"></div>
+<script>
+var out = document.getElementById('out');
+var problems = [];
+function row(ok, title, detail){
+  var d = document.createElement('div');
+  d.className = 'item';
+  d.innerHTML = '<div class="st">' + (ok === null ? '⏳' : ok ? '✅' : '❌') + '</div>' +
+    '<div><b>' + title + '</b><span>' + detail + '</span></div>';
+  out.appendChild(d);
+  if(ok === false) problems.push(title);
+  return d;
+}
+function fetchText(u){
+  return fetch(u + '?nocheck=' + Date.now(), { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.text() : null; }).catch(function(){ return null; });
+}
+(function(){
+  var cfgTxt = '', SBU = '', SBK = '';
+  fetchText('js/02-config.js').then(function(t){
+    cfgTxt = t || '';
+    var v = (cfgTxt.match(/APP_VERSION\s*=\s*'([^']+)'/) || [])[1];
+    row(!!v && parseFloat(v) >= 4.1, 'เวอร์ชันโค้ดบนเว็บ',
+      v ? ('พบเวอร์ชัน <b>' + v + '</b>' + (parseFloat(v) >= 4.1 ? ' — ใหม่พอ ✓' : ' — <b>เก่าเกินไป ต้อง 4.1 ขึ้นไป</b> อัปโหลดชุดล่าสุดแล้วรีเฟรช'))
+        : 'อ่านไฟล์ js/02-config.js ไม่ได้');
+    SBU = (cfgTxt.match(/SB_URL\s*=\s*'([^']+)'/) || [])[1] || '';
+    SBK = (cfgTxt.match(/SB_KEY\s*=\s*'([^']+)'/) || [])[1] || '';
+    return fetchText('js/18-livemode.js');
+  }).then(function(t){
+    var ok = !!t && t.indexOf('renderLiveBanner') >= 0;
+    row(ok, 'ไฟล์ระบบไลฟ์ (js/18-livemode.js)',
+      ok ? 'พบไฟล์ครบ ✓' :
+      '<b>ไม่พบไฟล์!</b> นี่คือสาเหตุที่ปุ่ม LIVE ไม่ขึ้น — ตอนอัปขึ้น GitHub ต้องเพิ่ม "ไฟล์ใหม่" ด้วย ไม่ใช่แค่ทับไฟล์เดิม (ใช้ git add -A หรือลากทั้งโฟลเดอร์)');
+    return fetchText('index.html');
+  }).then(function(t){
+    var ok = !!t && t.indexOf('lvFab') >= 0 && t.indexOf('18-livemode.js') >= 0;
+    row(ok, 'หน้าเว็บหลัก (index.html) มีปุ่ม LIVE',
+      ok ? 'มีโค้ดปุ่ม LIVE + เรียกไฟล์ไลฟ์ ✓' : '<b>index.html เป็นเวอร์ชันเก่า</b> — ทับด้วยไฟล์จากชุดล่าสุด');
+    /* เช็กการตั้งค่าไลฟ์จาก Supabase */
+    if(!SBU || !SBK){ row(false, 'เชื่อมต่อฐานข้อมูล', 'อ่านค่าเชื่อมต่อจาก config ไม่ได้'); return null; }
+    return fetch(SBU + '/rest/v1/settings?select=key,value&key=like.live_*',
+      { headers: { apikey: SBK, Authorization: 'Bearer ' + SBK } })
+      .then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+  }).then(function(rows){
+    if(rows === null && problems.indexOf('เชื่อมต่อฐานข้อมูล') >= 0) return fin();
+    if(!rows){ row(false, 'อ่านการตั้งค่าไลฟ์', 'ต่อ Supabase ไม่ได้ หรือยังไม่ได้รัน sql/setup.sql'); return fin(); }
+    var cfg = {}; rows.forEach(function(r){ cfg[r.key] = r.value; });
+    var on = cfg.live_on === '1';
+    row(on, 'สถานะไลฟ์ในฐานข้อมูล',
+      on ? ('เปิดอยู่ ✓ เรื่อง: <code>' + (cfg.live_movie || '-') + '</code>' +
+            (cfg.live_start ? ' · เริ่ม: ' + new Date(cfg.live_start).toLocaleString('th-TH') : ''))
+         : '<b>ไลฟ์ยังปิดอยู่</b> — เข้า <code>/admin</code> → เมนู 🔴 ไลฟ์ → เลือกเรื่อง → กด "🔴 เริ่มไลฟ์" แล้วปุ่มจะขึ้นทันที');
+    if(on && cfg.live_start && Date.now() < new Date(cfg.live_start).getTime()){
+      row(true, 'โหมดนับถอยหลัง', 'ตั้งเวลาไว้ล่วงหน้า — ปุ่ม LIVE จะโชว์พร้อมตัวนับถอยหลัง');
+    }
+    fin();
+  });
+  function fin(){
+    var v = document.getElementById('verdict');
+    if(!problems.length){
+      v.className = 'verdict ok';
+      v.innerHTML = '✅ <b>ทุกอย่างพร้อม!</b> กลับไปหน้าแรกแล้วรีเฟรช 1 ครั้ง ปุ่ม 🔴 LIVE จะอยู่มุมขวาล่าง';
+    } else {
+      v.className = 'verdict bad';
+      v.innerHTML = '❌ <b>เจอปัญหา ' + problems.length + ' จุด:</b> ' + problems.join(' · ') +
+        '<br><br>แก้ตามคำแนะนำในแต่ละข้อด้านบน แล้วเปิดหน้านี้ซ้ำเพื่อเช็กอีกครั้ง';
+    }
+  }
+})();
+</script>
+</body>
+</html>

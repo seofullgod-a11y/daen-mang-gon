@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /check.html
 
 # แก้ URL ด้านล่างเป็นโดเมนจริงของคุณ แล้วอัปโหลด sitemap.xml (สร้างจากหลังบ้าน /admin) ไว้ที่รากเว็บ
 Sitemap: https://romazeed1.info/sitemap.xml
