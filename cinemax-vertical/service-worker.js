@@ -2,7 +2,7 @@
    - app shell (HTML/CSS/JS/ไอคอน) → cache-first เปิดเร็ว + ออฟไลน์ได้
    - Supabase REST / วิดีโอ → network เสมอ (ไม่ cache) ข้อมูลสดตลอด
    เปลี่ยน CACHE เวอร์ชันเมื่ออัปเดตไฟล์ เพื่อล้าง cache เก่า        */
-var CACHE = 'cinemax-v28';
+var CACHE = 'cinemax-v29';
 
 var SHELL = [
   './',
