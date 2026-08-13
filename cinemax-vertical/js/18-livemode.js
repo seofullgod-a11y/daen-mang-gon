@@ -20,9 +20,19 @@ function liveState(){
 /* ── แบนเนอร์หน้าแรก (+ นับถอยหลังก่อนเริ่ม) ── */
 function renderLiveBanner(){
   var b = document.getElementById('lvBanner'); if(!b) return;
+  var fab = document.getElementById('lvFab');
   if(LV.cd){ clearInterval(LV.cd); LV.cd = null; }
   var st = liveState();
-  if(st.s === 'off'){ b.style.display = 'none'; return; }
+  if(st.s === 'off'){
+    b.style.display = 'none';
+    if(fab) fab.style.display = 'none';
+    return;
+  }
+  if(fab){
+    fab.style.display = 'flex';
+    var fc = document.getElementById('lvFabCd');
+    if(fc) fc.textContent = '';
+  }
   var title = LIVECFG.live_title || ('พรีเมียร์ "' + displayTitle(st.m) + '"');
   b.style.display = 'flex';
   b.innerHTML =
@@ -35,12 +45,12 @@ function renderLiveBanner(){
     var tick = function(){
       var left = Math.max(0, st.start - Date.now());
       var el = document.getElementById('lvCd');
-      if(el){
-        var s = Math.floor(left / 1000);
-        var hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60;
-        el.textContent = 'เริ่มใน ' + (hh ? hh + ':' : '') +
-          ('0' + mm).slice(-2) + ':' + ('0' + ss).slice(-2);
-      }
+      var s = Math.floor(left / 1000);
+      var hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60;
+      var txt = (hh ? hh + ':' : '') + ('0' + mm).slice(-2) + ':' + ('0' + ss).slice(-2);
+      if(el) el.textContent = 'เริ่มใน ' + txt;
+      var fc = document.getElementById('lvFabCd');
+      if(fc) fc.textContent = txt;
       if(left <= 0){ clearInterval(LV.cd); LV.cd = null; renderLiveBanner(); }
     };
     tick(); LV.cd = setInterval(tick, 1000);

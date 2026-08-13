@@ -645,6 +645,18 @@ button:focus-visible,[role="button"]:focus-visible,a:focus-visible,.chip:focus-v
   font-weight:800;font-size:.95rem;padding:14px 26px;border-radius:30px;
   background:linear-gradient(120deg,var(--red),var(--redD));color:#fff;box-shadow:0 8px 30px rgba(229,9,20,.4)}
 
+/* ปุ่มลอย LIVE มุมขวาล่าง (เหนือเมนูล่าง) */
+#lvFab{position:fixed;right:14px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:49;
+  width:58px;height:58px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  background:linear-gradient(135deg,#ff2b35,var(--redD));color:#fff;
+  box-shadow:0 6px 22px rgba(229,9,20,.45);border:2px solid rgba(255,255,255,.25)}
+#lvFab i{width:7px;height:7px;border-radius:50%;background:#fff;animation:lvPulse 1.2s infinite}
+#lvFab b{font-family:'Kanit';font-weight:800;font-size:.68rem;letter-spacing:.05em;line-height:1}
+#lvFab small{font-size:.5rem;font-weight:700;opacity:.9;font-variant-numeric:tabular-nums;line-height:1}
+#lvFab:active{transform:scale(.9)}
+body.player-open #lvFab{display:none!important}
+@media(min-width:1101px){ #lvFab{bottom:24px;right:24px} }
+
 /* ── more button ── */
 .more-btn{display:block;width:100%;margin-top:14px;padding:12px;border-radius:14px;
   font-weight:600;font-size:.84rem;color:var(--g2);background:rgba(255,255,255,.05);
