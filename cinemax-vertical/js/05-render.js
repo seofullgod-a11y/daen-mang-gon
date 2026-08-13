@@ -16,7 +16,7 @@ function posterHtml(m, extra){
   var vw = viewsOf(m);
   var pv = vw >= 10 ? (IC.eye + ' ' + fmtCount(vw))
     : (m.rating ? (IC.star + ' ' + m.rating.toFixed(1)) : (m.year || ''));
-  var isNew = m.added && (Date.now() - new Date(m.added).getTime()) < 14 * 86400000;
+  var isNew = m.added && (Date.now() - new Date(m.added).getTime()) < 7 * 86400000;   // 7 วันพอ — ไม่งั้น NEW เต็มจอจนไม่มีความหมาย
   var badge = m.coming ? '<span class="badge cs">เร็วๆ นี้</span>' : (isNew ? '<span class="badge new">NEW</span>' : '');
   return '<div class="poster">' + inner + badge + (extra || '') +
     (pv ? '<span class="pv">' + pv + '</span>' : '') + '</div>';
@@ -69,7 +69,10 @@ function lazyRender(key, elId, fn){
   var elm = document.getElementById(elId);
   var sec = elm && elm.closest ? elm.closest('.sec') : null;
   var run = function(){
-    if(sec) sec.classList.remove('pend');
+    if(sec){
+      sec.classList.remove('pend');
+      if(!sec._revealed){ sec._revealed = 1; sec.classList.add('rev'); }   // fade-up นุ่มๆ ครั้งแรกที่โผล่
+    }
     fn();
   };
   if(_lazyDone[key]){ run(); return; }
@@ -111,6 +114,7 @@ function renderAll(){
   renderProfile();
   var db = document.getElementById('demo-banner');
   if(db) db.style.display = ST.demo ? 'flex' : 'none';
+  if(typeof applyUICustom === 'function') applyUICustom();   // ธีม/การซ่อนส่วนจากหลังบ้าน
 }
 
 function visMovies(){
@@ -119,6 +123,7 @@ function visMovies(){
 
 function renderChips(){
   var box = document.getElementById('chips'); box.innerHTML = '';
+  if(!uiOn('chips')){ box.style.display = 'none'; return; }
   var cats = [];
   ST.movies.forEach(function(m){
     (m.genre || '').split(/[·,/|]/).forEach(function(g){
@@ -143,6 +148,7 @@ var _bbTimer = null, _bbIdx = 0, _bbItems = [];
 function renderHero(){
   var bb = document.getElementById('billboard');
   bb.classList.remove('skel');
+  if(!uiOn('billboard')){ bb.style.display = 'none'; return; }
   if(_bbTimer){ clearInterval(_bbTimer); _bbTimer = null; }
   var list = visMovies().filter(function(m){ return isPlayable(m) || ST.demo; })
     .slice().sort(popSort).slice(0, 6);
@@ -195,7 +201,8 @@ function renderHero(){
 function bbAuto(){
   if(_bbTimer) clearInterval(_bbTimer);
   if(_bbItems.length > 1)
-    _bbTimer = setInterval(function(){ bbGo((_bbIdx + 1) % _bbItems.length); }, 6000);
+    _bbTimer = setInterval(function(){ bbGo((_bbIdx + 1) % _bbItems.length); },
+      Math.max(3, parseInt(UICFG.ui_bb_sec) || 6) * 1000);
 }
 
 function bbGo(i, manual){
@@ -234,6 +241,7 @@ function bbFav(btn, id){
 
 function renderContinue(){
   var sec = document.getElementById('sec-cont'), row = document.getElementById('contRow');
+  if(!uiOn('cont')){ sec.style.display = 'none'; return; }
   var list = continueList().slice(0, 10);
   sec.style.display = list.length ? '' : 'none';
   row.innerHTML = '';
@@ -248,6 +256,7 @@ function renderContinue(){
 
 function renderRank(){
   var rr = document.getElementById('rankRow'); rr.innerHTML = '';
+  if(!uiOn('top10')){ var sc = rr.closest('.sec'); if(sc) sc.style.display = 'none'; return; }
   var list = visMovies().slice().sort(popSort).slice(0, 10);
   list.forEach(function(m, i){
     rr.appendChild(el('<div class="rank-card" data-id="' + esc(m.id) + '">' +
@@ -273,6 +282,7 @@ function renderGridNew(){
     visMovies().slice().sort(function(a,b){ return (b.added || '').localeCompare(a.added || ''); }));
 }
 function renderGridRec(){
+  if(!uiOn('gridrec')){ var g = document.getElementById('gridRec'), sc = g && g.closest('.sec'); if(sc) sc.style.display = 'none'; return; }
   fillGridLimited('gridRec',
     visMovies().slice().sort(function(a,b){ return hashCode(a.id + 'x') - hashCode(b.id + 'x'); }));
 }
@@ -310,7 +320,7 @@ function renderRankFull(){
 function renderArticles(){
   var sec = document.getElementById('sec-articles'), box = document.getElementById('homeArticles');
   if(!box) return;
-  if(!ST.articles.length){ if(sec) sec.style.display = 'none'; return; }
+  if(!ST.articles.length || !uiOn('articles')){ if(sec) sec.style.display = 'none'; return; }
   if(sec) sec.style.display = '';
   box.innerHTML = '';
   ST.articles.slice(0, 6).forEach(function(a){
@@ -523,28 +533,70 @@ function movieScore(m, Q){
   }
   return best <= cap ? (60 - best * 12) : 0;
 }
+var LS_RECENT = 'cxv_recent';
+function getRecent(){ return lsGet(LS_RECENT, []); }
+function pushRecent(q){
+  var r = getRecent().filter(function(x){ return x !== q; });
+  r.unshift(q); lsSet(LS_RECENT, r.slice(0, 8));
+}
+var _recentT = null;
+function renderSearchExtras(){
+  var box = document.getElementById('searchExtras'); if(!box) return;
+  var html = '';
+  var rec = getRecent();
+  if(rec.length){
+    html += '<div class="sx-h">ค้นหาล่าสุด<button class="sx-clear" onclick="lsSet(LS_RECENT,[]);renderSearchExtras()">ลบทั้งหมด</button></div>' +
+      '<div class="sx-chips">' + rec.map(function(r){
+        return '<span class="sx-chip" data-q="' + esc(r) + '" onclick="var i=document.getElementById(\'searchInput\');i.value=this.dataset.q;doSearch(this.dataset.q)">' + esc(r) + '</span>';
+      }).join('') + '</div>';
+  }
+  var map = allTags();
+  var top = Object.keys(map).sort(function(a, b){ return map[b] - map[a]; }).slice(0, 8);
+  if(top.length){
+    html += '<div class="sx-h">หมวดยอดฮิต</div><div class="sx-chips">' + top.map(function(t){
+      return '<span class="sx-chip hot" data-q="' + esc(t) + '" onclick="openCat(this.dataset.q)">#' + esc(t) + '</span>';
+    }).join('') + '</div>';
+  }
+  box.innerHTML = html;
+  box.style.display = html ? 'block' : 'none';
+}
 function doSearch(q){
   var g = document.getElementById('gridSearch'), hd = document.getElementById('searchHead');
+  var sx = document.getElementById('searchExtras');
   g.innerHTML = '';
   q = (q || '').trim();
   var list;
   if(!q){
-    list = ST.movies.slice(0, 12);
+    list = ST.movies.slice().sort(popSort).slice(0, 12);
+    renderSearchExtras();
   } else {
+    if(sx) sx.style.display = 'none';
     var Q = normTxt(q);
     list = ST.movies
       .map(function(m){ return { m: m, sc: movieScore(m, Q) }; })
       .filter(function(x){ return x.sc > 0; })
       .sort(function(a, b){ return b.sc - a.sc || popSort(a.m, b.m); })
       .map(function(x){ return x.m; });
+    /* จำคำค้น (หลังหยุดพิมพ์ + เจอผลจริง) */
+    clearTimeout(_recentT);
+    if(q.length >= 2 && list.length){
+      _recentT = setTimeout(function(){ pushRecent(q); }, 1200);
+    }
   }
   hd.textContent = q ? ('ผลการค้นหา "' + q + '" (' + list.length + ')') : 'ยอดนิยม';
+  if(q && !list.length){
+    g.innerHTML = '<div class="sx-none">ไม่พบ "' + esc(q) + '"<br>' +
+      '<button class="more-btn" style="max-width:280px;margin:14px auto 0" ' +
+      'onclick="var i=document.getElementById(\'searchInput\');i.value=\'\';doSearch(\'\')">ดูเรื่องยอดนิยมแทน</button></div>';
+    return;
+  }
   list.slice(0, 60).forEach(function(m){ g.appendChild(el(cardHtml(m))); });
 }
 
 /* ── แนะนำตามประวัติ: "เพราะคุณดู ..." ── */
 function renderRecos(){
   var sec = document.getElementById('sec-reco'); if(!sec) return;
+  if(!uiOn('reco')){ sec.style.display = 'none'; return; }
   var hist = continueList();
   if(!hist.length){ sec.style.display = 'none'; return; }
   var src = hist[0].m;
@@ -572,7 +624,10 @@ function renderProfile(){
   document.getElementById('st-like').textContent = getLikes().length;
   var g = document.getElementById('gridFav'); g.innerHTML = '';
   var favs = getFavs().map(function(id){ return ST.movies.find(function(m){ return m.id === id; }); }).filter(Boolean);
-  document.getElementById('fav-empty').style.display = favs.length ? 'none' : 'block';
+  var fe = document.getElementById('fav-empty');
+  fe.style.display = favs.length ? 'none' : 'block';
+  if(!favs.length) fe.innerHTML = 'ยังไม่มีรายการโปรด — กด "บันทึก" ระหว่างดูเพื่อเก็บไว้ที่นี่' +
+    '<br><button class="more-btn" style="max-width:240px;margin:12px auto 0" onclick="go(\'rank\')">ไปสำรวจเรื่องเด่น ›</button>';
   favs.slice(0, 30).forEach(function(m){ g.appendChild(el(cardHtml(m))); });
   renderHistory();
 }

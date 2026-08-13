@@ -70,7 +70,7 @@
         <div class="cont-row" id="recoRow"></div>
       </div>
       <div class="sec">
-        <div class="sec-h"><h2>Top 10 ประจำวันนี้ 🔥</h2><span class="more" onclick="go('rank')" style="cursor:pointer">ทั้งหมด ›</span></div>
+        <div class="sec-h"><h2>Top 10 ประจำวันนี้</h2><span class="more" onclick="go('rank')" style="cursor:pointer">ทั้งหมด ›</span></div>
         <div class="rank-row" id="rankRow"></div>
       </div>
       <div class="sec">
@@ -82,7 +82,7 @@
         <div class="grid" id="gridRec"></div>
       </div>
       <div class="sec" id="sec-articles" style="display:none">
-        <div class="sec-h"><h2>📖 บทความจาก CineMax</h2></div>
+        <div class="sec-h"><h2>บทความน่าอ่าน</h2></div>
         <div class="art-list" id="homeArticles"></div>
       </div>
     </div>
@@ -134,6 +134,7 @@
       </div>
     </div>
     <div class="wrap">
+      <div id="searchExtras"></div>
       <div class="sec"><div class="sec-h"><h2 id="searchHead">ยอดนิยม</h2></div><div class="grid" id="gridSearch"></div></div>
     </div>
   </div>
@@ -176,6 +177,7 @@
 
   <!-- PLAYER -->
   <div id="player">
+    <div id="plAmbient"></div>
     <div id="feed"></div>
     <div class="pl-top">
       <button class="pl-back" onclick="closePlayer()" aria-label="ปิด" data-ic="back"></button>

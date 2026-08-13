@@ -1,7 +1,7 @@
 /* ── CONFIG ───────────────────────────────────────
    ค่าเชื่อมต่อ Supabase (โปรเจกต์เดียวกับเว็บเดิม)
    anon key = public read-only ตามปกติของ Supabase   */
-var APP_VERSION = '3.5';   // เลขเวอร์ชันแอป — เช็กได้ที่หน้า "ของฉัน"
+var APP_VERSION = '3.7';   // เลขเวอร์ชันแอป — เช็กได้ที่หน้า "ของฉัน"
 
 var SB_URL = 'https://pugdpjixgwzpursmveht.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1Z2Rwaml4Z3d6cHVyc212ZWh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDkyNDQsImV4cCI6MjA5NDY4NTI0NH0.nLyAbmxqwMyN7SS6GErYJAXlbB1yjf_bKgGqrjYQ9k4';
@@ -27,6 +27,13 @@ function loadScript(src){
 }
 var HLS_CDN = 'https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js';
 var SUPA_CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+
+/* ── การปรับแต่งหน้าเว็บจากหลังบ้าน (settings key ui_*) ──
+   cache ไว้ใน localStorage → เปิดครั้งถัดไปธีมถูกตั้งแต่เฟรมแรก ไม่กะพริบ */
+var UICFG = {};
+try{ UICFG = JSON.parse(localStorage.getItem('cxv_uicfg')) || {}; }catch(e){ UICFG = {}; }
+/* uiOn('top10') → เปิดอยู่ไหม (ค่าเริ่มต้น = เปิด, ปิดเมื่อตั้งเป็น '0') */
+function uiOn(k){ return (UICFG['ui_show_' + k] || '1') !== '0'; }
 
 /* ค่า SEO เริ่มต้น (ทับได้จากหลังบ้าน → ตาราง settings) */
 var SITE = {

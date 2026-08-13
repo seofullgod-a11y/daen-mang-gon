@@ -60,6 +60,7 @@ function liveLeave(){
 
 function updateLiveBadge(n){
   var b = document.getElementById('liveBadge'); if(!b) return;
+  if(typeof uiOn === 'function' && !uiOn('live')){ b.style.display = 'none'; return; }
   if(n >= 2){ b.style.display = 'inline-flex'; b.querySelector('span').textContent = n; }
   else b.style.display = 'none';
 }

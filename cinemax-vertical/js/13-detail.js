@@ -20,7 +20,7 @@ function openDetail(id){
   pills.push('<span class="dt-pill">' + (m.type === 'series' ? 'ซีรีส์' : 'ภาพยนตร์') + '</span>');
   if(m.year) pills.push('<span class="dt-pill">' + m.year + '</span>');
   if(m.dur)  pills.push('<span class="dt-pill">' + m.dur + ' นาที</span>');
-  tokens.slice(0,3).forEach(function(t){ pills.push('<span class="dt-pill">' + esc(t) + '</span>'); });
+  /* แนวเรื่องแสดงในแถว #แท็ก (กดได้) ด้านล่างแล้ว — ไม่ซ้ำใน pills */
 
   var crew = '';
   if(m.dir)  crew += '<div class="dt-crew"><b>ผู้กำกับ</b>' + esc(m.dir) + '</div>';

@@ -107,15 +107,56 @@ function loadSettings(){
     .then(function(r){ return r.ok ? r.json() : []; })
     .catch(function(){ return []; })
     .then(function(rows){
+      var ui = {};
       (rows || []).forEach(function(r){
         if(r.key === 'site_title' && r.value) SITE.title = r.value;
         if(r.key === 'site_desc' && r.value) SITE.desc = r.value;
         if(r.key === 'site_kw' && r.value) SITE.kw = r.value;
         if(r.key === 'og_image' && r.value) SITE.og = r.value;
         if(r.key === 'site_url' && r.value) SITE.url = r.value;
+        if(r.key.indexOf('ui_') === 0) ui[r.key] = r.value;
       });
+      UICFG = ui;
+      try{ localStorage.setItem('cxv_uicfg', JSON.stringify(ui)); }catch(e){}
       applySiteSEO();
+      applyUICustom();
     });
+}
+
+/* ── ปรับแต่ง UX/UI ตามค่าจากหลังบ้าน (/admin → 🎨 ปรับแต่งเว็บ) ── */
+function applyUICustom(){
+  var rs = document.documentElement.style;
+  /* สีธีม */
+  if(UICFG.ui_color_primary){ rs.setProperty('--red', UICFG.ui_color_primary); }
+  if(UICFG.ui_color_dark){ rs.setProperty('--redD', UICFG.ui_color_dark); }
+  if(UICFG.ui_color_accent){ rs.setProperty('--rose', UICFG.ui_color_accent); rs.setProperty('--gold', UICFG.ui_color_accent); }
+  if(UICFG.ui_color_bg){
+    rs.setProperty('--bg', UICFG.ui_color_bg);
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if(tc) tc.setAttribute('content', UICFG.ui_color_bg);
+  }
+  /* แบรนด์/โลโก้ */
+  if(UICFG.ui_brand1 || UICFG.ui_brand2){
+    document.querySelectorAll('.logo b, .in-logo b').forEach(function(n){ if(UICFG.ui_brand1) n.textContent = UICFG.ui_brand1; });
+    document.querySelectorAll('.logo em, .in-logo em').forEach(function(n){
+      if(UICFG.ui_brand2 && !n.classList.contains('in-shine')) n.textContent = UICFG.ui_brand2;
+    });
+  }
+  if(UICFG.ui_seal){
+    document.querySelectorAll('.seal, .in-seal').forEach(function(n){ n.textContent = UICFG.ui_seal; });
+  }
+  /* ซ่อน/แสดงส่วนต่างๆ */
+  var hideSec = function(elId, on){
+    var el = document.getElementById(elId); if(!el) return;
+    var sec = el.closest ? (el.closest('.sec') || el) : el;
+    if(!on) sec.style.display = 'none';
+  };
+  if(!uiOn('chips')){ var ch = document.getElementById('chips'); if(ch) ch.style.display = 'none'; }
+  if(!uiOn('billboard')){ var bb = document.getElementById('billboard'); if(bb) bb.style.display = 'none'; }
+  hideSec('rankRow', uiOn('top10'));
+  hideSec('gridRec', uiOn('gridrec'));
+  if(!uiOn('voice')){ var mb = document.getElementById('micBtn'); if(mb) mb.style.display = 'none'; }
+  if(!uiOn('party')){ var pt = document.getElementById('ptBtn'); if(pt) pt.style.display = 'none'; }
 }
 function applySiteSEO(){
   document.title = SITE.title;

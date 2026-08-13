@@ -5,7 +5,8 @@
   var intro = document.getElementById('intro');
   if(!intro) return;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(sessionStorage.getItem('cxv_intro') || reduced){
+  var offByAdmin = typeof uiOn === 'function' && !uiOn('intro');
+  if(sessionStorage.getItem('cxv_intro') || reduced || offByAdmin){
     intro.remove(); return;
   }
   sessionStorage.setItem('cxv_intro', '1');

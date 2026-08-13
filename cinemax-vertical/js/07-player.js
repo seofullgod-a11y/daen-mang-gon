@@ -299,6 +299,12 @@ function activate(i){
 
   var ap = document.getElementById('arrPrev'), an = document.getElementById('arrNext');
   if(ap){ ap.disabled = i <= 0; an.disabled = i >= FEED.length - 1; }
+  /* เดสก์ท็อป: พื้นหลังเบลอจากโปสเตอร์เรื่องที่ดู แทนขอบดำโล่งๆ */
+  var amb = document.getElementById('plAmbient');
+  if(amb){
+    var ambSrc = m.bg || m.poster;
+    amb.style.backgroundImage = ambSrc ? 'url("' + ambSrc.replace(/"/g, '') + '")' : 'none';
+  }
   buildRail(m); buildCaption(m, p);
   applyWatchSEO(m, p);
   if(!p.loading && !p.empty && !p.trailerUrl){
@@ -332,7 +338,7 @@ function buildRail(m){
   document.getElementById('rail').innerHTML =
     '<div class="avatar" role="button" aria-label="รายละเอียดเรื่อง" onclick="event.stopPropagation();openDetail(\'' + esc(m.id) + '\')">' + avatar + '</div>' +
     '<button class="act' + (liked ? ' liked' : '') + '" id="btnLike"><div class="ic">' + (liked ? IC.heartFill : IC.heart) + '</div><div class="n">' + likeLabel(m, liked) + '</div></button>' +
-    '<button class="act" id="btnCmt"><div class="ic">' + IC.chat + '</div><div class="n">คอมเมนต์</div></button>' +
+    (uiOn('cmt') ? '<button class="act" id="btnCmt"><div class="ic">' + IC.chat + '</div><div class="n">คอมเมนต์</div></button>' : '') +
     '<button class="act' + (faved ? ' faved' : '') + '" id="btnFav"><div class="ic">' + (faved ? IC.bookmarkFill : IC.bookmark) + '</div><div class="n">' + (faved ? 'บันทึกแล้ว' : 'บันทึก') + '</div></button>' +
     '<button class="act" onclick="openSheet()"><div class="ic">' + IC.list + '</div><div class="n">' + (FEED[curIdx] && FEED[curIdx].ep ? 'ตอน' : 'เรื่อง') + '</div></button>' +
     '<button class="act" id="btnShare"><div class="ic">' + IC.share + '</div><div class="n">แชร์</div></button>';
@@ -340,11 +346,14 @@ function buildRail(m){
     ev.stopPropagation();
     var on = toggleLike(m.id); this.classList.toggle('liked', on);
     bumpLike(m.id, on ? 1 : -1);
-    this.querySelector('.ic').innerHTML = on ? IC.heartFill : IC.heart;
+    var ic = this.querySelector('.ic');
+    ic.innerHTML = on ? IC.heartFill : IC.heart;
+    ic.classList.remove('pop'); void ic.offsetWidth; ic.classList.add('pop');   // เด้งตุบทุกครั้งที่กด
     this.querySelector('.n').textContent = likeLabel(m, on);
     if(on){ heartBurst(); if(typeof sendReact === 'function') sendReact('❤️'); }
   });
-  document.getElementById('btnCmt').addEventListener('click', function(ev){
+  var bc = document.getElementById('btnCmt');
+  if(bc) bc.addEventListener('click', function(ev){
     ev.stopPropagation(); openComments();
   });
   document.getElementById('btnFav').addEventListener('click', function(ev){
@@ -364,7 +373,7 @@ function buildRail(m){
 
 function buildCaption(m, p){
   /* แท็ก SEO: แนว + คีย์เวิร์ดจากหลังบ้าน (kw) — กดแล้วเปิดหน้าหมวดหมู่ (?t=) */
-  var tags = (typeof tagsOf === 'function' ? tagsOf(m) : []).slice(0, 6);
+  var tags = (uiOn('tags') && typeof tagsOf === 'function' ? tagsOf(m) : []).slice(0, 6);
   var tagHtml = tags.map(function(t, i){
     return '<span' + (i === 0 ? ' class="hl"' : '') + ' data-q="' + esc(t) +
       '" role="button" onclick="event.stopPropagation();tagCat(this.dataset.q)">#' + esc(t) + '</span>';

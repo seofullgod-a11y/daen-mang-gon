@@ -84,6 +84,26 @@ button.tag{cursor:pointer}
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#191919;border:1px solid var(--line);
   padding:11px 20px;border-radius:22px;font-size:.83rem;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
 #toast.on{opacity:1}
+#side .grp{font-size:.6rem;font-weight:800;color:var(--g3);letter-spacing:.08em;padding:12px 12px 4px;text-transform:uppercase}
+/* theme pane */
+.swat{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.swat button{width:120px;border-radius:14px;border:2px solid var(--line);padding:10px;text-align:center;
+  font-size:.72rem;font-weight:700;color:#fff;display:flex;flex-direction:column;gap:7px;align-items:center;background:var(--panel2)}
+.swat button:hover{border-color:rgba(255,255,255,.3)}
+.swat .dots{display:flex;gap:5px}
+.swat .dots i{width:18px;height:18px;border-radius:50%;display:block}
+.crow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 14px}
+.crow input[type=color]{height:44px;padding:4px;cursor:pointer}
+.sw{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.85rem}
+.sw:last-child{border-bottom:none}
+.sw span{flex:1}
+.sw small{color:var(--g3);font-size:.68rem;display:block}
+.sw input[type=checkbox]{width:40px;height:22px;appearance:none;background:var(--panel2);border:1px solid var(--line);
+  border-radius:20px;position:relative;cursor:pointer;transition:background .2s;flex:none}
+.sw input[type=checkbox]::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;
+  background:var(--g2);transition:all .2s}
+.sw input[type=checkbox]:checked{background:rgba(229,9,20,.55);border-color:transparent}
+.sw input[type=checkbox]:checked::after{left:20px;background:#fff}
 @media(max-width:860px){
   #side{width:100%;height:auto;bottom:auto;position:sticky;flex-direction:row;overflow-x:auto;padding:10px}
   #side .lg{display:none}#side .sp{display:none}#side .ver{display:none}
@@ -111,12 +131,17 @@ button.tag{cursor:pointer}
   <div id="side">
     <div class="lg">Cine<em>Max</em></div>
     <button data-p="dash" class="on" onclick="pane('dash')">📊 แดชบอร์ด</button>
+    <div class="grp">เนื้อหา</div>
     <button data-p="movies" onclick="pane('movies')">🎬 หนัง/ซีรีส์</button>
     <button data-p="eps" onclick="pane('eps')">📺 ตอนซีรีส์</button>
     <button data-p="arts" onclick="pane('arts')">📖 บทความ</button>
-    <button data-p="tags" onclick="pane('tags')">🏷 แท็ก/หมวดหมู่</button>
     <button data-p="cmts" onclick="pane('cmts')">💬 คอมเมนต์</button>
+    <div class="grp">หน้าตาเว็บ</div>
+    <button data-p="theme" onclick="pane('theme')">🎨 ปรับแต่งเว็บ (UX/UI)</button>
+    <div class="grp">SEO / การตลาด</div>
+    <button data-p="tags" onclick="pane('tags')">🏷 แท็ก/หมวดหมู่</button>
     <button data-p="seo" onclick="pane('seo')">🔍 SEO / ตั้งค่า</button>
+    <div class="grp">ระบบ</div>
     <button data-p="backup" onclick="pane('backup')">💾 สำรองข้อมูล</button>
     <div class="sp"></div>
     <a class="nav" id="siteLink" href="../" target="_blank" rel="noopener">🌐 เปิดหน้าเว็บ</a>
@@ -181,6 +206,58 @@ button.tag{cursor:pointer}
       <div class="bar"><h1>บทความ (SEO)</h1><button class="btn" onclick="editArt(null)">+ เขียนบทความ</button></div>
       <div class="card" id="artForm" style="display:none"></div>
       <div class="card"><table class="tbl" id="artTable"></table></div>
+    </div>
+
+    <!-- THEME / UI CUSTOMIZER -->
+    <div class="pane" id="p-theme">
+      <div class="bar"><h1>🎨 ปรับแต่งเว็บ (UX/UI)</h1>
+        <button class="btn gh" onclick="resetTheme()">↺ ค่าเริ่มต้น</button>
+        <button class="btn" onclick="saveTheme()">💾 บันทึก — มีผลทั้งเว็บทันที</button></div>
+
+      <div class="card">
+        <h2>ธีมสีสำเร็จรูป</h2>
+        <p class="muted">กดเลือกธีมแล้วช่องสีด้านล่างจะเปลี่ยนตาม — ปรับต่อเองได้ทุกช่อง แล้วกด "บันทึก" ด้านบน</p>
+        <div class="swat" id="swatRow"></div>
+        <div class="crow" style="margin-top:14px">
+          <div><label>สีหลัก (ปุ่ม/โลโก้/ไฮไลต์)</label><input type="color" id="u_c_primary" value="#e50914"></div>
+          <div><label>สีหลักเข้ม (ไล่เฉดปุ่ม)</label><input type="color" id="u_c_dark" value="#8f070e"></div>
+          <div><label>สีรอง (ตัวเลข/ป้าย)</label><input type="color" id="u_c_accent" value="#ff4d55"></div>
+          <div><label>สีพื้นหลังเว็บ</label><input type="color" id="u_c_bg" value="#0b0b0b"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>แบรนด์ / โลโก้</h2>
+        <div class="row3">
+          <div><label>ชื่อส่วนแรก (สีขาว)</label><input id="u_brand1" placeholder="Cine"></div>
+          <div><label>ชื่อส่วนหลัง (สีธีม)</label><input id="u_brand2" placeholder="Max"></div>
+          <div><label>ตราสัญลักษณ์ (1-2 ตัวอักษร)</label><input id="u_seal" maxlength="2" placeholder="剧"></div>
+        </div>
+        <div class="sw" style="margin-top:8px"><span>อินโทรเปิดเว็บ (โลโก้เด้งตอนเข้าครั้งแรก)<small>ปิด = เข้าหน้าแรกทันที เร็วขึ้นนิดหน่อย</small></span>
+          <input type="checkbox" id="u_s_intro" checked></div>
+      </div>
+
+      <div class="card">
+        <h2>ส่วนต่างๆ ในหน้าแรก (เปิด/ปิดได้อิสระ)</h2>
+        <div class="sw"><span>แถบหมวดหมู่ (chips) บนสุด</span><input type="checkbox" id="u_s_chips" checked></div>
+        <div class="sw"><span>Billboard ภาพใหญ่<small>ภาพสไลด์แนะนำเรื่องเด่นด้านบน</small></span><input type="checkbox" id="u_s_billboard" checked></div>
+        <div class="sw"><span>แถว "ดูต่อจากที่ค้าง"</span><input type="checkbox" id="u_s_cont" checked></div>
+        <div class="sw"><span>แถว "เพราะคุณดู..." (แนะนำจากประวัติ)</span><input type="checkbox" id="u_s_reco" checked></div>
+        <div class="sw"><span>Top 10 ประจำวัน</span><input type="checkbox" id="u_s_top10" checked></div>
+        <div class="sw"><span>กริด "แนะนำสำหรับคุณ"</span><input type="checkbox" id="u_s_gridrec" checked></div>
+        <div class="sw"><span>บทความท้ายหน้าแรก<small>แนะนำให้เปิดไว้ — ช่วย SEO</small></span><input type="checkbox" id="u_s_articles" checked></div>
+        <label style="margin-top:14px">ความเร็วสไลด์ Billboard (วินาที/ภาพ — ต่ำสุด 3)</label>
+        <input id="u_bb_sec" type="number" min="3" max="30" value="6" style="max-width:140px">
+      </div>
+
+      <div class="card">
+        <h2>หน้าเล่นวิดีโอ</h2>
+        <div class="sw"><span>#แท็กใต้วิดีโอ<small>แนะนำให้เปิดไว้ — ช่วย SEO + พาไปหน้าหมวดหมู่</small></span><input type="checkbox" id="u_s_tags" checked></div>
+        <div class="sw"><span>ปุ่มคอมเมนต์</span><input type="checkbox" id="u_s_cmt" checked></div>
+        <div class="sw"><span>ป้าย "N กำลังดูอยู่" (เรียลไทม์)</span><input type="checkbox" id="u_s_live" checked></div>
+        <div class="sw"><span>ปุ่มดูพร้อมกัน (Watch Party)</span><input type="checkbox" id="u_s_party" checked></div>
+        <div class="sw"><span>ปุ่มค้นหาด้วยเสียง (ไมค์)</span><input type="checkbox" id="u_s_voice" checked></div>
+      </div>
     </div>
 
     <!-- TAGS / CATEGORIES -->
@@ -312,6 +389,7 @@ function pane(p){
   document.getElementById('p-' + p).classList.add('on');
   document.querySelectorAll('#side [data-p]').forEach(function(b){ b.classList.toggle('on', b.dataset.p === p); });
   if(p === 'tags') renderTags();
+  if(p === 'theme') fillTheme();
 }
 
 /* ── STATS (ยอดวิว/ไลก์) ── */
@@ -621,6 +699,79 @@ function delArt(slug){
   api('articles?slug=eq.' + encodeURIComponent(slug), { method: 'DELETE' })
     .then(function(){ toast('ลบแล้ว'); loadArts(); })
     .catch(function(e){ toast('ลบไม่สำเร็จ: ' + e.message); });
+}
+
+/* ── THEME / UI CUSTOMIZER ── */
+var THEME_PRESETS = [
+  { n: 'Netflix แดง', p: '#e50914', d: '#8f070e', a: '#ff4d55', b: '#0b0b0b' },
+  { n: 'ทองหรู',      p: '#d4af37', d: '#7c611c', a: '#ffd700', b: '#0c0b08' },
+  { n: 'ม่วงนีออน',   p: '#8b5cf6', d: '#4c1d95', a: '#a78bfa', b: '#0b0a12' },
+  { n: 'น้ำเงิน',      p: '#2563eb', d: '#1e3a8a', a: '#60a5fa', b: '#090e16' },
+  { n: 'เขียวมรกต',   p: '#10b981', d: '#065f46', a: '#34d399', b: '#08110d' },
+  { n: 'ชมพู',        p: '#ec4899', d: '#9d174d', a: '#f472b6', b: '#120a10' }
+];
+var _UI_TOGGLES = ['intro','chips','billboard','cont','reco','top10','gridrec','articles','tags','cmt','live','party','voice'];
+function renderSwatches(){
+  document.getElementById('swatRow').innerHTML = THEME_PRESETS.map(function(t, i){
+    return '<button onclick="applyPreset(' + i + ')"><span class="dots">' +
+      '<i style="background:' + t.p + '"></i><i style="background:' + t.a + '"></i><i style="background:' + t.b + ';border:1px solid rgba(255,255,255,.2)"></i>' +
+      '</span>' + t.n + '</button>';
+  }).join('');
+}
+function applyPreset(i){
+  var t = THEME_PRESETS[i];
+  document.getElementById('u_c_primary').value = t.p;
+  document.getElementById('u_c_dark').value = t.d;
+  document.getElementById('u_c_accent').value = t.a;
+  document.getElementById('u_c_bg').value = t.b;
+  toast('เลือกธีม "' + t.n + '" แล้ว — กด 💾 บันทึก เพื่อใช้จริง');
+}
+function fillTheme(){
+  renderSwatches();
+  document.getElementById('u_c_primary').value = SETT.ui_color_primary || '#e50914';
+  document.getElementById('u_c_dark').value = SETT.ui_color_dark || '#8f070e';
+  document.getElementById('u_c_accent').value = SETT.ui_color_accent || '#ff4d55';
+  document.getElementById('u_c_bg').value = SETT.ui_color_bg || '#0b0b0b';
+  document.getElementById('u_brand1').value = SETT.ui_brand1 || '';
+  document.getElementById('u_brand2').value = SETT.ui_brand2 || '';
+  document.getElementById('u_seal').value = SETT.ui_seal || '';
+  document.getElementById('u_bb_sec').value = SETT.ui_bb_sec || 6;
+  _UI_TOGGLES.forEach(function(k){
+    var el = document.getElementById('u_s_' + k);
+    if(el) el.checked = (SETT['ui_show_' + k] || '1') !== '0';
+  });
+}
+function resetTheme(){
+  if(!confirm('คืนทุกอย่างเป็นค่าเริ่มต้น (ธีมแดง Netflix + เปิดทุกส่วน)?')) return;
+  applyPreset(0);
+  document.getElementById('u_brand1').value = '';
+  document.getElementById('u_brand2').value = '';
+  document.getElementById('u_seal').value = '';
+  document.getElementById('u_bb_sec').value = 6;
+  _UI_TOGGLES.forEach(function(k){ var el = document.getElementById('u_s_' + k); if(el) el.checked = true; });
+  saveTheme();
+}
+function saveTheme(){
+  var rows = [
+    { key: 'ui_color_primary', value: fv('u_c_primary') },
+    { key: 'ui_color_dark', value: fv('u_c_dark') },
+    { key: 'ui_color_accent', value: fv('u_c_accent') },
+    { key: 'ui_color_bg', value: fv('u_c_bg') },
+    { key: 'ui_brand1', value: fv('u_brand1') },
+    { key: 'ui_brand2', value: fv('u_brand2') },
+    { key: 'ui_seal', value: fv('u_seal') },
+    { key: 'ui_bb_sec', value: String(Math.max(3, parseInt(fv('u_bb_sec')) || 6)) }
+  ];
+  _UI_TOGGLES.forEach(function(k){
+    var el = document.getElementById('u_s_' + k);
+    rows.push({ key: 'ui_show_' + k, value: el && el.checked ? '1' : '0' });
+  });
+  api('settings?on_conflict=key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: rows })
+    .then(function(){
+      rows.forEach(function(r){ SETT[r.key] = r.value; });
+      toast('บันทึกการปรับแต่งแล้ว ✓ ผู้ชมเห็นทันทีที่รีเฟรช');
+    })
+    .catch(function(e){ toast('บันทึกไม่สำเร็จ: ' + e.message + ' (รัน sql/setup.sql ล่าสุดหรือยัง?)'); });
 }
 
 /* ── TAGS / CATEGORIES ── */
